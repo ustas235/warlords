@@ -23,9 +23,18 @@ public class move : MonoBehaviour
     private void OnMouseDown()
     {
         kursor.gameObject.SetActive(false);
-        data.get_activ_unit().transform.position = kursor.transform.position;//перемещаем юнит
+        data.get_activ_unit().move_unit(data.can_move_cell.koordint3x);//перемещаем юнит
+        //data.get_activ_unit().transform.position = data.can_move_cell.koordint3x;//перемещаем юнит
 
         //Debug.Log(transform.InverseTransformVector(MousePos));
-        data.Cam.transform.position = new Vector3(data.get_activ_unit().transform.position.x, data.get_activ_unit().transform.position.y, data.Cam.transform.position.z);
+        data.move_cam(data.get_activ_unit().koordinat);
+        
+        foreach (GameObject p in data.spisok_puti) Destroy(p);
+        data.get_activ_unit().tek_hod = data.get_activ_unit().tek_hod_tmp;//обновим остаток ходов после перемещения
+        if (data.type_event==2)//если при перемещении идет ааткака
+        {
+            //если добрались до противника начнется бой
+            if (data.get_activ_unit().koordinat == kursor.transform.position) data.get_activ_unit().attack_event();//начинаем атаку
+        }
     }
 }
