@@ -8,6 +8,7 @@ public class unit : MonoBehaviour
     // Start is called before the first frame update
     
     public data_game data;//класс где буду хранится все данные игры
+    
     mouse obj_mouse;//объект с скриптами мыши
     public int max_hod=8;//количество ходов максимальное
     public int tek_hod = 8;//количество ходов текущее
@@ -24,7 +25,7 @@ public class unit : MonoBehaviour
         //к объекту привязан свой скрипт ищем его
         data = obj_player.GetComponent(typeof(data_game)) as data_game;
         obj_mouse = obj_player.GetComponent(typeof(mouse)) as mouse;
-
+        
     }
 
     // Update is called once per frame
@@ -106,7 +107,7 @@ public class unit : MonoBehaviour
         else winn = data.get_activ_unit();
         //найдем скрипт связанный с панелью ататки
         s_panel_attack win_panel_script = data.attack_window.GetComponent(typeof(s_panel_attack)) as s_panel_attack;
-        win_panel_script.winner.GetComponent<Image>().sprite = winn.spr_unit;
+        win_panel_script.winner.GetComponent<Image>().sprite = winn.spr_unit;//спрайт победителя
         data.attack_window.SetActive(true);//покажем окно
     }
 }

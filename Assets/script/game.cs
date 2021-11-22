@@ -79,6 +79,8 @@ public class game : MonoBehaviour
                 num_tek_igrok = next;
                 //ходы юнитов игрока на максимум
                 foreach (unit u in gamer_list[next].skript_unit_list) u.tek_hod = u.max_hod;
+                //итерация производства юнитов во всех городах игрока
+                foreach (city c in gamer_list[next].city_list) c.create_unit();
                 break;
             }
             next++;
@@ -167,5 +169,5 @@ public class game : MonoBehaviour
         gamer_list[num_igrok].skript_unit_list.Add(tmp_unit);//скриптов к объектам
 
     }
-
+    
 }

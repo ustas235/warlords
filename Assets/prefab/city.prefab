@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   kursor: {fileID: 4050168653969080095, guid: 740abf8bc3f35f94f8a87ee3995e687a, type: 3}
+  unit_prefab: {fileID: 2205284970402582333, guid: e5d9c16ef7ca89f4aad73aa52dd6231b, type: 3}
   spr_kursor_attack: {fileID: -7283245193915405687, guid: a65965332cc647f489a4488356bb6e2a, type: 3}
   spr_kursor_in_city: {fileID: 5387556493645396423, guid: a65965332cc647f489a4488356bb6e2a, type: 3}
   spr_city: {fileID: 0}
@@ -53,6 +54,9 @@ MonoBehaviour:
   vladelec: {fileID: 0}
   id: 0
   koordinat: {x: 0, y: 0, z: 0}
+  id_unit: 1
+  count_hod: 1
+  count_hod_start: 1
 --- !u!212 &792026843198475376
 SpriteRenderer:
   m_ObjectHideFlags: 0

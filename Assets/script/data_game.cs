@@ -11,6 +11,8 @@ public class data_game : MonoBehaviour
     public int count_player=4;//количесвто игроков
     //-----------------------
     private unit activ_unit;//активный юнит
+    public city activ_city;//активный город
+    public game game_s;//класс со скриптом игры
     public unit attack_untit;//юнит на который идет атака
     public int type_event = 1;//текущее событие 1-перемещение, 2 атака
     public gamer tek_activ_igrok;
@@ -29,6 +31,8 @@ public class data_game : MonoBehaviour
     public item_cell[,] kletki;//двумерный массив с объектами клеток
     void Start()
     {
+        GameObject obj_player = GameObject.Find("land");
+        game_s = obj_player.GetComponent(typeof(game)) as game;//найдем главный скрипт с игрой
         attack_window.SetActive(false);
         kletki = new item_cell[max_kletka_x + 1, max_kletka_y + 1];//двумерный массив с объектами клеток
         int count = 0;
