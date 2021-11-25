@@ -22,15 +22,15 @@ public class s_panel : MonoBehaviour
     }
     public void but1()
     {
-        data.activ_city.setting_activ_city(1);
+        data.activ_city.setting_activ_city(0);
     }
     public void but2()
     {
-        data.activ_city.setting_activ_city(2);
+        data.activ_city.setting_activ_city(1);
     }
     public void but3()
     {
-        data.activ_city.setting_activ_city(3);
+        data.activ_city.setting_activ_city(2);
     }
     public void exit()
     {

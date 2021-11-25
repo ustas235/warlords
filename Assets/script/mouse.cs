@@ -43,7 +43,7 @@ public class mouse : MonoBehaviour
         if (!EventSystem.current.IsPointerOverGameObject())
         {
             mouse_event(1);
-            data.type_event = 1;//сохраним тип события бля дальнейшей обработки
+            data.type_event = 1;//1-перемещение сохраним тип события бля дальнейшей обработки
         }
     }
     //создание объектов  показывающих путь

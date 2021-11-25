@@ -11,16 +11,19 @@ public class game : MonoBehaviour
     public GameObject city_prefab;//префаб города
     public GameObject unit_prefab;//префаб юнита
     public GameObject butt_end;//тест кнопка конца хода
+    mouse obj_mouse;//объект с скриптами мыши
     public int num_tek_igrok = 1;
     Sprite[] spr_unit_grey, spr_unit_bel, spr_unit_dark, spr_unit_zel, spr_unit_orange;//наборы спрайтов юнитов
     Sprite[] spr_city_grey, spr_city_bel, spr_city_dark, spr_city_zel, spr_city_orange;//наборы спрайтов городов
     List<Sprite[]> spr_list_city = new List<Sprite[]>();//список со спратами городов по номеру игрока
     List<Sprite[]> spr_list_unit = new List<Sprite[]>();//список со спратами юнитов по номеру игрока
+    int index_unit = 0;//счетчик для перебора юнитов
     void Start()
     {
         GameObject obj_player = GameObject.Find("land");
         //к объекту привязан свой скрипт ищем его
         data = obj_player.GetComponent(typeof(data_game)) as data_game;
+        obj_mouse = obj_player.GetComponent(typeof(mouse)) as mouse;
         //подгружаем спрайты юнитов
         {
             spr_unit_grey = Resources.LoadAll<Sprite>("sprite/army/grey");//спрайты нейтралов
@@ -62,7 +65,7 @@ public class game : MonoBehaviour
     {
 
     }
-    public void end_turn()//обработка конца хода
+    public void end_turn()//обработка кнопки конца хода
     {
         foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
         
@@ -95,6 +98,7 @@ public class game : MonoBehaviour
             //Vector3 tmp_vect=data.tek_activ_igrok.unit_list[0]
             data.move_cam(data.tek_activ_igrok.skript_unit_list[0].koordinat);
             data.set_activ_untit(data.tek_activ_igrok.skript_unit_list[0]);
+            index_unit = 0;
         }//либо на первый город
         else
         {
@@ -102,7 +106,25 @@ public class game : MonoBehaviour
         } 
             
     }
-        
+    public void deselect_button()// обработка кнопки нет активного юнита
+    {
+        data.set_activ_untit(null);
+        obj_mouse.kursor.gameObject.SetActive(false);// курсор невидим
+        foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
+    }
+    public void next_unit_button()// обработка кнопки перебор юнитов
+    {
+        // поиск следующего юнита для активации 
+        if (data.tek_activ_igrok.obj_unit_list.Count > 0)
+        {
+            index_unit++;
+            if (index_unit >= data.tek_activ_igrok.obj_unit_list.Count) index_unit = 0;
+            data.move_cam(data.tek_activ_igrok.skript_unit_list[index_unit].koordinat);
+            data.set_activ_untit(data.tek_activ_igrok.skript_unit_list[index_unit]);
+            foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
+            obj_mouse.kursor.gameObject.SetActive(false);// курсор невидим
+        }//либо на первый город
+    }
     public void create_gamers()//создание игроков
     {
         for (int i = 0; i < 5; i++)

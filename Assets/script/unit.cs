@@ -35,20 +35,27 @@ public class unit : MonoBehaviour
     }
     private void OnMouseDown()
     {
-
-        if (data.tek_activ_igrok.id == this.vladelec.id)//если юнит принадлежит активному игроку
+        if (data.get_activ_unit() == null)
         {
-            data.set_activ_untit(this);//при клике юнита он передает в данные себя
-            this.transform.position = data.get_grid_step(this.transform.position);//выровним позицию по сетке
-            data.move_cam(koordinat);
+            if (data.tek_activ_igrok.id == this.vladelec.id)//если юнит принадлежит активному игроку
+            {
+                data.set_activ_untit(this);//при клике юнита он передает в данные себя
+                this.transform.position = data.get_grid_step(this.transform.position);//выровним позицию по сетке
+                data.move_cam(koordinat);
+            }
         }
         else
         {
-            if (data.get_activ_unit()!=null)//клик по другому юниту - возможно попытка атаки
+            if (data.tek_activ_igrok.id != this.vladelec.id)//клик по другому юниту - возможно попытка атаки
             {
                 obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
                 data.attack_untit = this;//сохраним себя в атакуемом юните
                 data.type_event = 2; //сохраним тип события бля дальнейшей обработки
+            }
+            else//юнит союзни переместим на него курсор
+            {
+                data.type_event = 1;//событие перемещения
+                obj_mouse.mouse_event(1);//переместим туда юнит
             }
         }
         //Debug.Log("Стал активным в "+ this.transform.position);
@@ -65,7 +72,7 @@ public class unit : MonoBehaviour
         switch (num)
         {
             case 0:
-                max_hod = 0;
+                max_hod = 8;
                 tek_hod = max_hod;
                 strength = 2;
                 price = 3;
