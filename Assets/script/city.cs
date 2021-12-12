@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,6 +19,7 @@ public class city : MonoBehaviour
     public Vector3 koordinat;
     public int id_unit=1;//номер производимого юнита 0- легка€ пехота, 1- т€жела€, 2- рыцарь
     public int count_hod = 1, count_hod_start = -1;//количество ходов до завершени€ строительства
+    public List<unit> garnison = new List<unit>();//юниты охран€ющие город
     void Start()
     {
         GameObject obj_player = GameObject.Find("land");
@@ -38,14 +40,15 @@ public class city : MonoBehaviour
         //kursor.GetComponent<SpriteRenderer>().sprite= spr_attack;
         //this.GetComponent<SpriteRenderer>().sprite = spr_city_grey[0];
     }
-    private void OnMouseDown()
+    private void OnMouseUp()
     {
         //this.GetComponent<SpriteRenderer>().sprite = spr_city_bel[0];
         if (data.tek_activ_igrok.id == vladelec.id)//городу кликает владелец
         {
-            if (data.get_activ_unit() == null)//нет активынх юнитов откроем панель города
+            if (data.get_activ_army() == null)//нет активынх юнитов откроем панель города
             {
                 data.activ_city = this;//сохраним себ€ в активном городе
+                data.city_panel_s.set_panel(data.tek_activ_igrok.id);
                 data.city_window.SetActive(true);//если активный игрок владелец города показать панель
             } 
             else
@@ -54,6 +57,12 @@ public class city : MonoBehaviour
                 obj_mouse.mouse_event(1);//переместим туда юнит
             }
                 
+        }
+        else //город принадлежит другому игроку, попытка атаки города
+        {
+            obj_mouse.mouse_event(2);//вызываем метод перемещени€ с атакой
+            data.def_city = this;//сохраним себ€ в защищаемом город
+            data.type_event = 3; //сохраним тип событи€ бл€ дальнейшей обработки
         }
     }
     public void change_vladelec(gamer vlad)
@@ -71,16 +80,17 @@ public class city : MonoBehaviour
             if (count_hod <= 0)
             {
                 count_hod = count_hod_start;//одновим счетчик
-                                            //создадим юнита
+                //создадим юнита
+                
                 Vector3 koor_unit = new Vector3(koordinat.x - 0.2f, koordinat.y + 0.2f, koordinat.z);//координаты создани€ юнита
-                GameObject unit_tmp = (GameObject)Instantiate(unit_prefab, koor_unit, Quaternion.identity);
-                unit tmp = unit_tmp.GetComponent(typeof(unit)) as unit;//на скрипт
-                tmp.set_koordinat(koor_unit);//юнит запомнит свой координат
-                game_s.change_unit_player(vladelec.id, unit_tmp, id_unit);//настраиваем юнит
+                unit tmp_unit_s = new unit();
+                tmp_unit_s.set_koordinat(koor_unit);
+                tmp_unit_s.set_unit(id_unit, vladelec, game_s.get_sprite_unit(vladelec.id, id_unit), game_s.get_sprite_unit_off());
+                game_s.create_new_army(tmp_unit_s);
             }
         }
     }
-    public void setting_activ_city(int num_unit)//метод настройки производсвта гороа
+    public void setting_activ_city(int num_unit)//метод настройки производсвта города
     {
         id_unit = num_unit;
         switch (num_unit)
@@ -103,5 +113,14 @@ public class city : MonoBehaviour
                 break;
 
         }
+    }
+    public bool is_garnison(s_army sarmy)
+    {//метод провер€ет стоит ли арми€ в этом городе
+        Vector3 k = sarmy.koordinat;
+        float delta_x = Math.Abs(koordinat.x - k.x);
+        float delta_y = Math.Abs(koordinat.y - k.y);
+        if ((delta_x <= 0.25f) & (delta_y <= 0.25f)) 
+            return true;
+        else return false;
     }
 }

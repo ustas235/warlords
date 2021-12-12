@@ -40,7 +40,7 @@ public class mouse : MonoBehaviour
     //клик для указания конца пути
     void OnMouseDown()
     {
-        if (!EventSystem.current.IsPointerOverGameObject())
+        if ((!EventSystem.current.IsPointerOverGameObject())&(data.get_activ_army()!=null))
         {
             mouse_event(1);
             data.type_event = 1;//1-перемещение сохраним тип события бля дальнейшей обработки
@@ -50,9 +50,10 @@ public class mouse : MonoBehaviour
     public void mouse_event(int type_evrnt)
     {
         //метод отработки клика мышки
-        //1-перемещение, 2-атака
+        //1-перемещение, 2-атака, 3-атака города
         if (type_evrnt == 1) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_move;
         if (type_evrnt == 2) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
+        if (type_evrnt == 3) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
         open_list.Clear();
         close_list.Clear();
         //for (int i=0;i< spisok_puti.Count;i++)
@@ -62,11 +63,10 @@ public class mouse : MonoBehaviour
         MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         MousePos.z = -2.0f;
         kursor.transform.position = data.get_grid_step(MousePos);//перемещаем курсор
-                                                                 //Debug.Log("клик в - " + data.get_grid_step(MousePos));
         kursor.gameObject.SetActive(true);
         //установка стартовой и конечной точки
         //если у игрока есть юниты
-        if (data.tek_activ_igrok.obj_unit_list.Count > 0)
+        if (data.tek_activ_igrok.obj_army_list.Count > 0)
         {
             data.set_st_f_point(kursor.transform.position);
             //data.set_st_f_point(data.get_activ_unit().transform.position, kursor.transform.position);
@@ -95,7 +95,7 @@ public class mouse : MonoBehaviour
             close_list.Add(tek_cel);
         }
         
-        int count_hod = data.get_activ_unit().tek_hod;//оставшееся количесвто ходов юнита
+        int count_hod = data.get_activ_army().tek_hod;//оставшееся количесвто ходов юнита
         bool can_hod = true;
         foreach (item_cell cell in close_list)
         {
@@ -105,7 +105,7 @@ public class mouse : MonoBehaviour
             {
                 count_hod = count_hod - cell.get_cost_move();//вычитыаем перемещение
                 data.can_move_cell = cell;//обновим ячейку куда можем добраться
-                data.get_activ_unit().tek_hod_tmp = count_hod;
+                data.get_activ_army().tek_hod_tmp = count_hod;
             }
             else can_hod = false;//на дальнейшее перемещение очков не хватает
             if (can_hod) p=(GameObject)Instantiate(point_put, new Vector3(cell.kordinat.x, cell.kordinat.y, -2.0f), Quaternion.identity);
@@ -118,7 +118,7 @@ public class mouse : MonoBehaviour
         {
             count_hod = count_hod - finish_cell.get_cost_move();//вычитыаем перемещение
             data.can_move_cell = finish_cell;
-            data.get_activ_unit().tek_hod_tmp = count_hod;
+            data.get_activ_army().tek_hod_tmp = count_hod;
         }
     }
 

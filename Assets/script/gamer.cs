@@ -5,8 +5,9 @@ using UnityEngine;
 public class gamer : MonoBehaviour//
 {
     public List<city> city_list = new List<city>();//список городов
-    public List<GameObject> obj_unit_list = new List<GameObject>();//список объектов юнитов
-    public List<unit> skript_unit_list = new List<unit>();//список скприптов юнитов
+    public List<GameObject> obj_army_list = new List<GameObject>();//список объектов юнитов
+    //public List<s_army> skript_army_list = new List<s_army>();//список скприптов юнитов
+    public List<s_army> s_army_list = new List<s_army>();//список скприптов армий
     public data_game data;//класс где буду хранится все данные игры
     int money = 0;
     public int id = 0;//id игрока, он же номер

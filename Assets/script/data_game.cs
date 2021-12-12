@@ -11,16 +11,21 @@ public class data_game : MonoBehaviour
     public int count_player=4;//количесвто игроков
     //-----------------------
     private unit activ_unit;//активный юнит
+    private s_army activ_army;//активна€ арми€
     public city activ_city;//активный город
     public game game_s;//класс со скриптом игры
-    public unit attack_untit;//юнит на который идет атака
-    public int type_event = 1;//текущее событие 1-перемещение, 2 атака
+    public s_army def_army;//защищиающа€с€ арми€
+    public city def_city;//защищиающийс€ город
+    public int type_event = 1;//текущее событие 1-перемещение, 2 атака, 3 атака города
     public gamer tek_activ_igrok;
     public item_cell can_move_cell;//€чейка, до которой юниту хватит очков хода
     public List<GameObject> spisok_puti;//список объектов пути
     public Camera Cam;//камера
     public GameObject city_window;//окно города
     public GameObject attack_window;//окно города
+    public s_panel_unit units_panel_s;//скрипт панели с юнитами
+    public s_panel_city city_panel_s;//скрипт панели с городом
+    public s_panel_attack atack_panel_s;//скрипт напнели сатакой
     public Vector2Int st_p, fin_p;//индексы координат х и у в массиве координат grid_x и grid_y
     public float[] grid_x=new float[18];
     public float[] grid_y = new float[18];
@@ -28,13 +33,21 @@ public class data_game : MonoBehaviour
     public int min_kletka_x = 0;
     public int max_kletka_y = 17;
     public int min_kletka_y = 0;
+    public int id_unit_count = 0;//счетчик индефикаторов юниов
     public item_cell[,] kletki;//двумерный массив с объектами клеток
     void Start()
     {
         GameObject obj_player = GameObject.Find("land");
         game_s = obj_player.GetComponent(typeof(game)) as game;//найдем главный скрипт с игрой
+        //надем скрипт с панелью юнитов
+        units_panel_s = GameObject.Find("Panel_unit").GetComponent(typeof(s_panel_unit)) as s_panel_unit;//найдем скрипт панели юнитов
+        city_panel_s = GameObject.Find("Panel_city").GetComponent(typeof(s_panel_city)) as s_panel_city;//найдем главный скрипт панели города
+        atack_panel_s= GameObject.Find("Panel_attack").GetComponent(typeof(s_panel_attack)) as s_panel_attack;//найдем скрипт панели с атакой
         attack_window.SetActive(false);
-        kletki = new item_cell[max_kletka_x + 1, max_kletka_y + 1];//двумерный массив с объектами клеток
+        city_window.SetActive(false);//скроем панели;
+        
+        //двумерный массив с объектами клеток
+        kletki = new item_cell[max_kletka_x + 1, max_kletka_y + 1];
         int count = 0;
         //заполнение сетки
         for (int i=0;i<18;i++)
@@ -61,13 +74,32 @@ public class data_game : MonoBehaviour
                 count++;//счетчик клеток
             }
     }
-    public void set_activ_untit(unit u)//установка активного игрока
+    public void set_activ_untit(unit u)//установка активного юнита
     {
         activ_unit = u;
+        if (u != null)
+        {
+            setting_panel_unit();//настроим панель с юнитами
+            set_activ_army(u.sc_army);
+        }
+    }
+    public void set_activ_army(s_army a)//установка активного игрока
+    {
+        activ_army = a;
+        if (a != null)
+        {
+            setting_panel_unit();//настроим панель с юнитами
+        }
+        
     }
     public unit get_activ_unit()//получение активного юнита
     {
+
         return activ_unit;
+    }
+    public s_army get_activ_army()//получение активного юнита
+    {
+        return activ_army;
     }
     // Update is called once per frame
     void Update()
@@ -99,7 +131,7 @@ public class data_game : MonoBehaviour
     }
     public void set_st_f_point( Vector3 point_f)//функкц€ установки стартовой финишной точки дл€ поиска пути, получает координаты старотовой точки и запоминает их индекс
     {
-        Vector3 point_s = get_activ_unit().transform.position;
+        Vector3 point_s = get_activ_army().transform.position;
         for (int i = 0; i < 18; i++)//перебираем массивы сточкми
         {
             if (grid_x[i] == point_s.x) 
@@ -119,5 +151,33 @@ public class data_game : MonoBehaviour
         Vector3 tmp = k;
         k.z = -5.0f;//камера будет выше всех
         Cam.transform.position = k;
+    }
+    public void setting_panel_unit()//метод настройкт панели с юнитам
+    {
+        List<unit> point_unit_list = new List<unit>();//список юнитов в точке сактивным юнитом
+        //сразу занесем в список юниты активной армии
+        foreach (unit tmp_unit in activ_army.unit_list) point_unit_list.Add(tmp_unit);
+        //перебираем все армии игрока
+        
+        foreach (s_army tmp_army in tek_activ_igrok.s_army_list)
+        {
+            if (!tmp_army.Equals(activ_army))
+            {
+                if ((activ_army.koordinat.x == tmp_army.koordinat.x) &
+                        (activ_army.koordinat.y == tmp_army.koordinat.y))
+                //если арми€ в тех же координатах что и активна€
+                {
+                    foreach (unit tmp_unit in tmp_army.unit_list)//перебираем все второй армии
+                    {
+                        //если таких юнитов там еще не было занесем в спиок
+                        point_unit_list.Add(tmp_unit);
+                        
+                    }
+                }
+            }
+        }
+        units_panel_s.set_panel_unit(point_unit_list);
+        
+        
     }
 }
