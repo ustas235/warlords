@@ -61,7 +61,7 @@ public class mouse : MonoBehaviour
 
         spisok_puti.Clear();
         MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        MousePos.z = -2.0f;
+        MousePos.z = -2.1f;
         kursor.transform.position = data.get_grid_step(MousePos);//перемещаем курсор
         kursor.gameObject.SetActive(true);
         //установка стартовой и конечной точки
@@ -169,8 +169,8 @@ public class mouse : MonoBehaviour
          return open_list_new;
         throw new NotImplementedException();
     }
-    
-    
+   
+
 }
 
 

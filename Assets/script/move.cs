@@ -23,6 +23,7 @@ public class move : MonoBehaviour
     private void OnMouseDown()
     {
         kursor.gameObject.SetActive(false);
+        Debug.Log("сраюотал мов");
         data.get_activ_army().move_army(data.can_move_cell.koordint3x);//перемещаем армию
         //data.get_activ_unit().move_unit(data.can_move_cell.koordint3x);//перемещаем юнит
         //data.get_activ_unit().transform.position = data.can_move_cell.koordint3x;//перемещаем юнит
@@ -36,12 +37,13 @@ public class move : MonoBehaviour
         if (data.type_event == 2) //начинаем атаку на другую армию
         {
             //если добрались до противника начнется бой
-            if (data.get_activ_army().koordinat == kursor.transform.position) data.get_activ_army().attack_event_army(); //координаты армии и защитника совпали - начался бой
+            if (data.get_activ_army().check_koordinat(kursor.transform.position)) data.get_activ_army().attack_event_army(); //координаты армии и защитника совпали - начался бой
         }
         if (data.type_event == 3) //начинаем атаку на город
         {
             //если добрались до противника начнется бой
-            if (data.get_activ_army().koordinat == kursor.transform.position) data.get_activ_army().attack_event_city();//начинаем атаку на другой город
+            if (data.get_activ_army().check_koordinat(kursor.transform.position)) data.get_activ_army().attack_event_city();//начинаем атаку на другой город
         }
     }
+  
 }

@@ -129,7 +129,7 @@ public class s_army : MonoBehaviour
 
             //data.atack_panel_s.set_panel_atack(unit_list, def_unit);//начинаем атаку на гарнизон
             //data.attack_window.SetActive(true);//покажем окно
-            calkulate_atack(unit_list, data.def_army.unit_list);//делаем расчет атаки и покаже окно
+            calkulate_atack(unit_list, def_unit);//делаем расчет атаки и покаже окно
         }
         else// если атака не на гарнизон
         {
@@ -153,10 +153,11 @@ public class s_army : MonoBehaviour
         }
         //data.atack_panel_s.set_panel_atack(unit_list, def_unit);//начинаем атаку на гарнизон
         //data.attack_window.SetActive(true);//покажем окно
-        calkulate_atack(unit_list, data.def_army.unit_list);//делаем расчет атаки и покаже окно
+        calkulate_atack(unit_list, def_unit);//делаем расчет атаки и покаже окно
     }
     private void OnMouseDown()
     {
+        Debug.Log("Сработал арми");
         if (data.get_activ_army() == null)
         {
             if (data.tek_activ_igrok.id == this.vladelec.id)//если армия принадлежит активному игроку
@@ -169,17 +170,20 @@ public class s_army : MonoBehaviour
         else
         {
             if (data.tek_activ_igrok.id != this.vladelec.id)//клик по другой армии - возможно попытка атаки
-            {
-                obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
+                {
                 data.def_army = this;//сохраним себя в защищаемой армии
-                data.type_event = 2; //сохраним тип события бля дальнейшей обработки
-            }
+                data.type_event = 2; //сохраним тип события бля дальнейшей обработки    
+                obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
+                    //obj_mouse.do_kursor();
+                }
             else//юнит союзни переместим на него курсор
-            {
-                data.type_event = 1;//событие перемещения
-                obj_mouse.mouse_event(1);//переместим туда курсор
-            }
+                {
+                    data.type_event = 1;//событие перемещения
+                    obj_mouse.mouse_event(1);//переместим туда курсор
+                    //obj_mouse.do_kursor();
+                }
         }
+        //obj_mouse.mouse_event(1);//переместим туда курсор
         //Debug.Log("Стал активным в "+ this.transform.position);
 
         //set_sprite(1, 1);
@@ -237,6 +241,11 @@ public class s_army : MonoBehaviour
             }
         }
         if (hit_a>0) return true;
+        else return false;
+    }
+    public bool check_koordinat(Vector3 k)
+    {//метод сравнения координат
+        if ((koordinat.x == k.x) & (koordinat.y == k.y)) return true;
         else return false;
     }
 }
