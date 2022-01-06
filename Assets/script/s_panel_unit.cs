@@ -82,9 +82,11 @@ public class s_panel_unit : MonoBehaviour
             //и перепишем юниты в новую армию
             //определяемстарший юнит
             //если добавили юнит в активную армию
-            if (flags[num_button]) data.get_activ_army().add_unit(s_unit_list[num_button]);
+            if (flags[num_button]) 
+                data.get_activ_army().add_unit(s_unit_list[num_button]);
             //иначе удалим юнит из акивной армии c созданием новую на его основе
-            else data.get_activ_army().sub_unit_create(s_unit_list[num_button]);
+            else 
+                data.get_activ_army().sub_unit_create(s_unit_list[num_button]);
 
         }
         else flags[num_button] = !flags[num_button];//вертаем обратно

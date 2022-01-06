@@ -12,7 +12,8 @@ public class s_panel_attack : MonoBehaviour
     List<bool> flags_def ;//флаги состояния атакующих
     public List<GameObject> obj_img_list_atack = new List<GameObject>();// список объектов изображений атакующей армии
     public List<GameObject> obj_img_list_def = new List<GameObject>();// список объектов изображений защищающей армии
-
+    List<unit> u_list_atack;//спосок атакющих
+    List<unit> u_list_def;//спосок защищающих
     // Start is called before the first frame update
     private void Awake()
     {
@@ -51,36 +52,30 @@ public class s_panel_attack : MonoBehaviour
     {//метод натройки панели атаки, получает два списка юнитов: атаки и защиты
         flags_atack = f_a;
         flags_def = f_d;
+        u_list_atack = unit_list_atack;
+        u_list_def = unit_list_def;
         Sprite tmp_spr;
         for (int i=0;i<8;i++)
-        {
-            //порядок отображения армий - от центра
-            int[] por = new int[8] {3,4,2,5,1,6,0,7};
-            int j;
-            for (i=0;i<8;i++)
+        {     
+            if (i< unit_list_atack.Count)// если в переданом списке юнитов больше чем номер текущ
             {
-                j = por[i];//получим индекс при нумерации от центра
-                //настроим изображение атакующих
-                if (i< unit_list_atack.Count)// если в переданом списке юнитов больше чем номер текущ
-                {
-                    if(flags_atack[i]) tmp_spr= unit_list_atack[i].spr_unit;
-                    else tmp_spr = unit_list_atack[i].spr_unit_off;//если юнит погиб, то спрайт будет выключен
-                    obj_img_list_atack[j].GetComponent<Image>().sprite = tmp_spr;//выставим изображение юнита
-                    obj_img_list_atack[j].SetActive(true);//покажем изображение июнита
-                }
-                else obj_img_list_atack[j].SetActive(false);//не покажем изображение июнита
-                
-                //настроим изображение защищающих
-                if (i < unit_list_def.Count)// если в переданом списке юнитов больше чем номер текущ
-                {
-                    if(flags_def[i]) tmp_spr = unit_list_def[i].spr_unit;
-                    else tmp_spr = unit_list_def[i].spr_unit_off;//если юнит погиб, то спрайт будет выключен
-                    obj_img_list_def[j].GetComponent<Image>().sprite = tmp_spr;//выставим изображение юнита
-                    obj_img_list_def[j].SetActive(true);//покажем изображение июнита
-                }
-                else obj_img_list_def[j].SetActive(false);//не покажем изображение июнита
-
+                if(flags_atack[i]) tmp_spr= unit_list_atack[i].spr_unit;
+                else tmp_spr = unit_list_atack[i].spr_unit_off;//если юнит погиб, то спрайт будет выключен
+                obj_img_list_atack[i].GetComponent<Image>().sprite = tmp_spr;//выставим изображение юнита
+                obj_img_list_atack[i].SetActive(true);//покажем изображение июнита
+                unit_list_atack[i].flag_life = flags_atack[i];//юнит запомнит сове состояние
             }
+            else obj_img_list_atack[i].SetActive(false);//не покажем изображение июнита
+            //настроим изображение защищающих
+            if (i < unit_list_def.Count)// если в переданом списке юнитов больше чем номер текущ
+            {
+                if(flags_def[i]) tmp_spr = unit_list_def[i].spr_unit;
+                else tmp_spr = unit_list_def[i].spr_unit_off;//если юнит погиб, то спрайт будет выключен
+                obj_img_list_def[i].GetComponent<Image>().sprite = tmp_spr;//выставим изображение юнита
+                obj_img_list_def[i].SetActive(true);//покажем изображение июнита
+                unit_list_def[i].flag_life = flags_def[i];//юнит запомнит сове состояние
+            }
+            else obj_img_list_def[i].SetActive(false);//не покажем изображение июнита
         }
     }
 }

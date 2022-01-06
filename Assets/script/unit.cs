@@ -11,6 +11,8 @@ public class unit : MonoBehaviour
     public data_game data;//класс где буду хранится все данные игры
     
     mouse obj_mouse;//объект с скриптами мыши
+    public GameObject flag;//ссыка на прикрепленный флаг
+    public Sprite[] flags_sprites = new Sprite[8];//массив со спратами флагов
     public int max_hod=1;//количество ходов максимальное
     public int tek_hod = 1;//количество ходов текущее
     public int tek_hod_tmp = 1;//количество ходов временное, после перемещения данное значение переместится в тек ход
@@ -23,7 +25,7 @@ public class unit : MonoBehaviour
     public Vector3 koordinat;//координаты юнита
     public s_army sc_army;//ссылка на армию
     public int id_unit = 0;//уникальный номер юнита
-
+    public bool flag_life = true;//флаг что юнит живой
     private void Awake()
     {
         
@@ -41,38 +43,7 @@ public class unit : MonoBehaviour
     {
         
     }
-    /*
-    private void OnMouseDown()
-    {
-        if (data.get_activ_unit() == null)
-        {
-            if (data.tek_activ_igrok.id == this.vladelec.id)//если юнит принадлежит активному игроку
-            {
-                data.set_activ_untit(this);//при клике юнита он передает в данные себя
-                data.set_activ_army(sc_army);//при клике юнита он передает в данные fактивной армии
-                this.transform.position = data.get_grid_step(this.transform.position);//выровним позицию по сетке
-                data.move_cam(koordinat);
-            }
-        }
-        else
-        {
-            if (data.tek_activ_igrok.id != this.vladelec.id)//клик по другому юниту - возможно попытка атаки
-            {
-                obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
-                data.attack_untit = this;//сохраним себя в атакуемом юните
-                data.type_event = 2; //сохраним тип события бля дальнейшей обработки
-            }
-            else//юнит союзни переместим на него курсор
-            {
-                data.type_event = 1;//событие перемещения
-                obj_mouse.mouse_event(1);//переместим туда юнит
-            }
-        }
-        //Debug.Log("Стал активным в "+ this.transform.position);
-
-        //set_sprite(1, 1);
-    }
-    */
+   
     public void set_unit(int num, gamer v, Sprite spr, Sprite[] srp_off)
     //установка юнита
     //0 - легкая пехота, 1 тяжелая, 2 -рыцарь
@@ -88,6 +59,7 @@ public class unit : MonoBehaviour
             case 0:
                 max_hod = 8;
                 tek_hod = max_hod;
+                tek_hod_tmp = tek_hod;
                 strength = 2;
                 price = 3;
                 spr_unit_off = srp_off[2];//спрайт выключенного юнита
@@ -95,6 +67,7 @@ public class unit : MonoBehaviour
             case 1:
                 max_hod = 6;
                 tek_hod = max_hod;
+                tek_hod_tmp = tek_hod;
                 strength = 3;
                 price = 6;
                 spr_unit_off = srp_off[1];//спрайт выключенного юнита
@@ -102,6 +75,7 @@ public class unit : MonoBehaviour
             case 2:
                 max_hod = 12;
                 tek_hod = max_hod;
+                tek_hod_tmp = tek_hod;
                 strength = 6;
                 price = 9;
                 spr_unit_off = srp_off[4];//спрайт выключенного юнита
@@ -109,6 +83,7 @@ public class unit : MonoBehaviour
             default:
                 max_hod = 12;
                 tek_hod = max_hod;
+                tek_hod_tmp = tek_hod;
                 strength = 2;
                 price = 3;
                 spr_unit_off = srp_off[2];//спрайт выключенного юнита
@@ -149,5 +124,13 @@ public class unit : MonoBehaviour
             if (id_unit == l[i].id_unit) tmp = true;
         }
         return tmp;
+    }
+    public void remove_unit(List<unit> u_list)
+    {//удаление юнита из списка
+        int num = -1;
+        for (int i = 0; i < u_list.Count; i++) if (id_unit == u_list[i].id_unit) 
+                num = i;
+        if (num >=0) 
+            u_list.RemoveAt(num);
     }
 }

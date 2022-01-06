@@ -45,6 +45,12 @@ public class mouse : MonoBehaviour
             mouse_event(1);
             data.type_event = 1;//1-перемещение сохраним тип событи€ бл€ дальнейшей обработки
         }
+        if ((!EventSystem.current.IsPointerOverGameObject()) & (data.get_activ_army() == null))
+        {//если клик по карте но нет активной армии, то переместим туда камеру
+            MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            MousePos.z = -10f;
+            data.move_cam(MousePos);//перемещаем камеру
+        }
     }
     //создание объектов  показывающих путь
     public void mouse_event(int type_evrnt)
@@ -56,9 +62,9 @@ public class mouse : MonoBehaviour
         if (type_evrnt == 3) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
         open_list.Clear();
         close_list.Clear();
+        data.can_move_cell_list.Clear();
         //for (int i=0;i< spisok_puti.Count;i++)
         foreach (GameObject p in spisok_puti) Destroy(p);
-
         spisok_puti.Clear();
         MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         MousePos.z = -2.1f;
@@ -105,6 +111,7 @@ public class mouse : MonoBehaviour
             {
                 count_hod = count_hod - cell.get_cost_move();//вычитыаем перемещение
                 data.can_move_cell = cell;//обновим €чейку куда можем добратьс€
+                data.can_move_cell_list.Add(cell);
                 data.get_activ_army().tek_hod_tmp = count_hod;
             }
             else can_hod = false;//на дальнейшее перемещение очков не хватает
@@ -118,6 +125,7 @@ public class mouse : MonoBehaviour
         {
             count_hod = count_hod - finish_cell.get_cost_move();//вычитыаем перемещение
             data.can_move_cell = finish_cell;
+            data.can_move_cell_list.Add(finish_cell);
             data.get_activ_army().tek_hod_tmp = count_hod;
         }
     }

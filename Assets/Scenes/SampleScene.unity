@@ -1110,7 +1110,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 410719782}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.004, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -1178,9 +1178,11 @@ MonoBehaviour:
   activ_city: {fileID: 0}
   game_s: {fileID: 0}
   def_army: {fileID: 0}
+  def_city: {fileID: 0}
   type_event: 1
   tek_activ_igrok: {fileID: 0}
   can_move_cell: {fileID: 0}
+  can_move_cell_list: []
   spisok_puti: []
   Cam: {fileID: 519420031}
   city_window: {fileID: 1022713841}
@@ -1247,6 +1249,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   city_prefab: {fileID: 8732281286865736514, guid: 1660b73507ff489489d73cb6505e4496, type: 3}
   unit_prefab: {fileID: 2205284970402582333, guid: e5d9c16ef7ca89f4aad73aa52dd6231b, type: 3}
+  flag_prefab: {fileID: 8273818316870893596, guid: f720e97c3641cb548b708ca801c71cae, type: 3}
   butt_end: {fileID: 794849954}
   num_tek_igrok: 0
   id: 0

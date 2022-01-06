@@ -19,6 +19,7 @@ public class data_game : MonoBehaviour
     public int type_event = 1;//текущее событие 1-перемещение, 2 атака, 3 атака города
     public gamer tek_activ_igrok;
     public item_cell can_move_cell;//€чейка, до которой юниту хватит очков хода
+    public List<item_cell> can_move_cell_list = new List<item_cell>();//список €чеек куда может жойти юнит
     public List<GameObject> spisok_puti;//список объектов пути
     public Camera Cam;//камера
     public GameObject city_window;//окно города
