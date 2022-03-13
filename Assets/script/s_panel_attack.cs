@@ -12,6 +12,7 @@ public class s_panel_attack : MonoBehaviour
     List<bool> flags_def ;//флаги состояния атакующих
     public List<GameObject> obj_img_list_atack = new List<GameObject>();// список объектов изображений атакующей армии
     public List<GameObject> obj_img_list_def = new List<GameObject>();// список объектов изображений защищающей армии
+    List<unit> destroy_list = new List<unit>();// список юнитов на удаление
     List<unit> u_list_atack;//спосок атакющих
     List<unit> u_list_def;//спосок защищающих
     // Start is called before the first frame update
@@ -46,6 +47,13 @@ public class s_panel_attack : MonoBehaviour
     }
     public void exit()
     {
+        data.set_flag_army_is_move(false);//после показа окна дадим разрешение двигатся другим юнитам
+        
+        //после выключения окна, удалим мертыве юнит
+        for(int i = destroy_list.Count-1;i>-1;i--)
+        {
+            destroy_list[i].destroy_unit();
+        }
         data.attack_window.SetActive(false);
     }
     public void set_panel_atack(List<unit> unit_list_atack,List<bool> f_a, List<unit> unit_list_def, List<bool> f_d)
@@ -59,8 +67,12 @@ public class s_panel_attack : MonoBehaviour
         {     
             if (i< unit_list_atack.Count)// если в переданом списке юнитов больше чем номер текущ
             {
-                if(flags_atack[i]) tmp_spr= unit_list_atack[i].spr_unit;
-                else tmp_spr = unit_list_atack[i].spr_unit_off;//если юнит погиб, то спрайт будет выключен
+                if (flags_atack[i]) tmp_spr = unit_list_atack[i].spr_unit;
+                else
+                {
+                    tmp_spr = unit_list_atack[i].spr_unit_off;//если юнит погиб, то спрайт будет выключен
+                    destroy_list.Add(unit_list_atack[i]);
+                }
                 obj_img_list_atack[i].GetComponent<Image>().sprite = tmp_spr;//выставим изображение юнита
                 obj_img_list_atack[i].SetActive(true);//покажем изображение июнита
                 unit_list_atack[i].flag_life = flags_atack[i];//юнит запомнит сове состояние
@@ -69,8 +81,12 @@ public class s_panel_attack : MonoBehaviour
             //настроим изображение защищающих
             if (i < unit_list_def.Count)// если в переданом списке юнитов больше чем номер текущ
             {
-                if(flags_def[i]) tmp_spr = unit_list_def[i].spr_unit;
-                else tmp_spr = unit_list_def[i].spr_unit_off;//если юнит погиб, то спрайт будет выключен
+                if (flags_def[i]) tmp_spr = unit_list_def[i].spr_unit;
+                else
+                {
+                    tmp_spr = unit_list_def[i].spr_unit_off;//если юнит погиб, то спрайт будет выключен
+                    destroy_list.Add(unit_list_def[i]);
+                }
                 obj_img_list_def[i].GetComponent<Image>().sprite = tmp_spr;//выставим изображение юнита
                 obj_img_list_def[i].SetActive(true);//покажем изображение июнита
                 unit_list_def[i].flag_life = flags_def[i];//юнит запомнит сове состояние

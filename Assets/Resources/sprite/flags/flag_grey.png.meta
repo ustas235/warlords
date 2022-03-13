@@ -1,16 +1,31 @@
 fileFormatVersion: 2
-guid: af2a1a434b56ea7419e6fd9cdfe343df
+guid: a1fe16c6b37c2774580df1ea1e58c29b
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8030984627780044120
-    second: zel_0
+      213: 4927798313641523034
+    second: flag_gray_0
   - first:
-      213: -5038743127941128067
-    second: zel_1
+      213: -5981790741881465034
+    second: flag_gray_1
   - first:
-      213: 975444489567448472
-    second: zel_2
+      213: 4767870346783740855
+    second: flag_gray_2
+  - first:
+      213: -9161538893827551195
+    second: flag_gray_3
+  - first:
+      213: 4580666513382810295
+    second: flag_gray_4
+  - first:
+      213: -4785312319108112105
+    second: flag_gray_5
+  - first:
+      213: 1541804376172720662
+    second: flag_gray_6
+  - first:
+      213: -8323172797833804206
+    second: flag_gray_7
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -113,13 +128,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: zel_0
+      name: flag_gray_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 32
-        height: 29
+        width: 40
+        height: 35
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -127,20 +142,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 855c37f08f9c37f60800000000000000
-      internalID: 8030984627780044120
+      spriteID: a573f59257e036440800000000000000
+      internalID: 4927798313641523034
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: zel_1
+      name: flag_gray_1
       rect:
         serializedVersion: 2
-        x: 32
+        x: 40
         y: 0
-        width: 32
-        height: 29
+        width: 40
+        height: 35
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -148,20 +163,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d70e0a052d9c21ab0800000000000000
-      internalID: -5038743127941128067
+      spriteID: 6375f6d53096cfca0800000000000000
+      internalID: -5981790741881465034
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: zel_2
+      name: flag_gray_2
       rect:
         serializedVersion: 2
-        x: 64
+        x: 80
         y: 0
-        width: 32
-        height: 29
+        width: 40
+        height: 35
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -169,8 +184,113 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 89da7ca5899798d00800000000000000
-      internalID: 975444489567448472
+      spriteID: 7b3d923b1d0ea2240800000000000000
+      internalID: 4767870346783740855
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_gray_3
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 520db7d7aecabd080800000000000000
+      internalID: -9161538893827551195
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_gray_4
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7b2a5bcacebc19f30800000000000000
+      internalID: 4580666513382810295
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_gray_5
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 711a248acc7279db0800000000000000
+      internalID: -4785312319108112105
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_gray_6
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 612faea49e6956510800000000000000
+      internalID: 1541804376172720662
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_gray_7
+      rect:
+        serializedVersion: 2
+        x: 280
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2560cec30762e7c80800000000000000
+      internalID: -8323172797833804206
       vertices: []
       indices: 
       edges: []
@@ -186,9 +306,14 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      zel_1: -5038743127941128067
-      zel_0: 8030984627780044120
-      zel_2: 975444489567448472
+      flag_gray_3: -9161538893827551195
+      flag_gray_7: -8323172797833804206
+      flag_gray_6: 1541804376172720662
+      flag_gray_2: 4767870346783740855
+      flag_gray_1: -5981790741881465034
+      flag_gray_0: 4927798313641523034
+      flag_gray_4: 4580666513382810295
+      flag_gray_5: -4785312319108112105
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

@@ -18,7 +18,9 @@ public class city : MonoBehaviour
     public gamer vladelec;//владелец города
     public int id_spr = 0;//номер спрайта города, чтобы автоматически находить его спрайт
     public Vector3 koordinat;//координаты города
-    public Vector3 koordinat_garnizon;//координаты для гарнизона
+    public Vector3 koordinat_garnizon;//координаты для стоянки армии гарнизона
+    public Vector3 koordinat_atack;//координаты для стоянки армии атаки
+    public Vector3 min_kkor;//координаты ближайшей точки, нужны для расчета у ботов
     public int id_unit=1;//номер производимого юнита 0- легкая пехота, 1- тяжелая, 2- рыцарь
     public int count_hod = 1, count_hod_start = -1;//количество ходов до завершения строительства
     public List<unit> garnison = new List<unit>();//юниты охраняющие город
@@ -65,7 +67,7 @@ public class city : MonoBehaviour
             else //город принадлежит другому игроку, попытка атаки города
             {
                 obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
-                data.def_city = this;//сохраним себя в защищаемом город
+                data.set_def_city(this);//сохраним себя в защищаемом город
                 data.type_event = 3; //сохраним тип события бля дальнейшей обработки
             }
         }
@@ -79,6 +81,7 @@ public class city : MonoBehaviour
         vlad.city_list.Add(this);//добавляем город игроку в список
         count_hod_start = -1;//сбросим производство
         koordinat_garnizon = new Vector3(koordinat.x + 0.2f, koordinat.y + 0.2f, koordinat.z);//гарнизон будет распологаться в проавом верхнем углу
+        koordinat_atack = new Vector3(koordinat.x - 0.2f, koordinat.y - 0.2f, koordinat.z);//армия атаки будет распологаться в левом нижнем углу
     }
     //выключение панели города
     public void create_unit()//метод по созданию юнитов
@@ -107,15 +110,15 @@ public class city : MonoBehaviour
         id_unit = num_unit;
         switch (num_unit)
         {
-            case 1://легкая пехота делается1 ход
+            case 0://легкая пехота делается1 ход
                 count_hod_start = 1;
                 count_hod = 1;
                 break;
-            case 2://тяжелая пехота делается 2 ход
+            case 1://тяжелая пехота делается 2 ход
                 count_hod_start = 2;
                 count_hod = 2;
                 break;
-            case 3://рыцари делается 3 ход
+            case 2://рыцари делается 3 ход
                 count_hod_start = 3;
                 count_hod = 3;
                 break;
@@ -138,7 +141,7 @@ public class city : MonoBehaviour
         else return false;
     }
     public bool is_garnison(unit s_unit)
-    {//метод проверяет стоит ли армия в этом городе
+    {//метод проверяет стоит ли юнит в этом городе
         Vector3 k = s_unit.koordinat;
         float delta_x = Math.Abs(koordinat.x - k.x);
         float delta_y = Math.Abs(koordinat.y - k.y);
@@ -147,5 +150,17 @@ public class city : MonoBehaviour
             return true;
         }
         else return false;
+    }
+    public List<unit> get_garnison_unit_list()
+    {//метод возвращает список юнитов, стоящих горнизоном
+        List<unit> garnison = new List<unit>();
+        foreach(s_army a in vladelec.s_army_list)
+        {
+            if (is_garnison(a))
+            {
+                foreach (unit u in a.unit_list) garnison.Add(u);
+            }
+        }
+        return garnison;
     }
 }

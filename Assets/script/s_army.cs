@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class s_army : MonoBehaviour
@@ -19,6 +20,10 @@ public class s_army : MonoBehaviour
     public Sprite spr_army;//спрайт армии
     public Vector3 koordinat;//координаты армии
     public List<unit> unit_list=new List<unit>();//список юнитов в армии
+    //для бота
+    public int status_army=0;//статус армии 0 -свободна, 1- в гарнизоне,2 собирается для атаки, 3 идет в атаку
+    public city target_city;//город, который идет/пойдет атаковать армия
+    Vector3 target_koordinat;//координы, куа пойдет атаковать армия
     void Start()
     {
         GameObject obj_player = GameObject.Find("land");
@@ -128,7 +133,7 @@ public class s_army : MonoBehaviour
             {
                 flag_g = true;
                 def_city = c;//запомним город
-                data.def_city = def_city;
+                data.set_def_city(def_city);
                 break;
             }
         //если атака идет на гарнизон, проверим нет ли в городе еще войск
@@ -157,12 +162,12 @@ public class s_army : MonoBehaviour
     public void attack_event_city()
     {//метод рсчета атака города (клик по городу)
         //проверим, не идет ли атака на гарнизон города
-        gamer oth_vl = data.def_city.vladelec;//защищающийся игрок
+        gamer oth_vl = data.get_def_city().vladelec;//защищающийся игрок
         //проверим нет ли в городе еще войск
         List<unit> def_unit = new List<unit>();
         foreach (s_army a in oth_vl.s_army_list)//перебираем все армии защищающегося игрока
         {
-            if (data.def_city.is_garnison(a))//если очередная армия в нашем городе
+            if (data.get_def_city().is_garnison(a))//если очередная армия в нашем городе
             {
                 foreach (unit u in a.unit_list) def_unit.Add(u);//записываем очередной юнит в гарнизон
             }
@@ -174,31 +179,34 @@ public class s_army : MonoBehaviour
     }
     private void OnMouseDown()
     {
-        Debug.Log("Сработал арми");
-        if (data.get_activ_army() == null)
+        //Debug.Log("Сработал арми");
+        if (!EventSystem.current.IsPointerOverGameObject() )
         {
-            if (data.tek_activ_igrok.id == this.vladelec.id)//если армия принадлежит активному игроку
+            if (data.get_activ_army() == null)
             {
-                data.set_activ_army(this);//при клике юнита он передает в данные активной армии
-                this.transform.position = data.get_grid_step(this.transform.position);//выровним позицию по сетке
-                data.move_cam(koordinat);
-            }
-        }
-        else
-        {
-            if (data.tek_activ_igrok.id != this.vladelec.id)//клик по другой армии - возможно попытка атаки
+                if (data.tek_activ_igrok.id == this.vladelec.id)//если армия принадлежит активному игроку
                 {
-                data.def_army = this;//сохраним себя в защищаемой армии
-                data.type_event = 2; //сохраним тип события бля дальнейшей обработки    
-                obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
+                    data.set_activ_army(this);//при клике юнита он передает в данные активной армии
+                    this.transform.position = data.get_grid_step(this.transform.position);//выровним позицию по сетке
+                    data.move_cam(koordinat);
+                }
+            }
+            else
+            {
+                if (data.tek_activ_igrok.id != this.vladelec.id)//клик по другой армии - возможно попытка атаки
+                {
+                    data.def_army = this;//сохраним себя в защищаемой армии
+                    data.type_event = 2; //сохраним тип события бля дальнейшей обработки    
+                    obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
                     //obj_mouse.do_kursor();
                 }
-            else//юнит союзни переместим на него курсор
+                else//юнит союзни переместим на него курсор
                 {
                     data.type_event = 1;//событие перемещения
                     obj_mouse.mouse_event(1);//переместим туда курсор
                     //obj_mouse.do_kursor();
                 }
+            }
         }
         //obj_mouse.mouse_event(1);//переместим туда курсор
         //Debug.Log("Стал активным в "+ this.transform.position);
@@ -282,5 +290,24 @@ public class s_army : MonoBehaviour
             u.tek_hod_tmp = max_hod;
         }
         set_army();
+    }
+    public int get_strenght()
+    {//метод высчитывает силу армии и возращает ее
+        int str = 0;
+        foreach (unit u in unit_list) str += u.strength;
+        return str;
+    }
+    public void set_target_koordinat(Vector3 k)
+    {
+        target_koordinat = k;
+    }
+    public Vector3 get_target_koordinat()
+    {
+        return target_koordinat;
+    }
+    public void set_status(int st)
+    {//метод выставляет статус армии и всех входящих юнитов
+        status_army = st;
+        foreach (unit u in unit_list) u.status_untit = st;
     }
 }

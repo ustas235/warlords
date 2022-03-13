@@ -23,7 +23,8 @@ public class mouse : MonoBehaviour
     List<Vector2Int> put_list = new List<Vector2Int>();//полученный путь
     item_cell tek_cel ;//текущая ячейка
     item_cell finish_cell ;//финишная ячейка
-
+    //тест
+    public int count_test = 0;//тест
     void Start()
     {
         kursor.gameObject.SetActive(false);//при старте курсор невидим
@@ -60,21 +61,22 @@ public class mouse : MonoBehaviour
         if (type_evrnt == 1) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_move;
         if (type_evrnt == 2) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
         if (type_evrnt == 3) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
-        open_list.Clear();
-        close_list.Clear();
         data.can_move_cell_list.Clear();
         //for (int i=0;i< spisok_puti.Count;i++)
         foreach (GameObject p in spisok_puti) Destroy(p);
         spisok_puti.Clear();
-        MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        MousePos.z = -2.1f;
-        kursor.transform.position = data.get_grid_step(MousePos);//перемещаем курсор
+        if (!data.tek_activ_igrok.bot_flag)
+        {//если метод вызвал бот, то эти настройки он сделает сам
+            MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            MousePos.z = -2.1f;
+            kursor.transform.position = data.get_grid_step(MousePos);//перемещаем курсор
+        }
         kursor.gameObject.SetActive(true);
         //установка стартовой и конечной точки
         //если у игрока есть юниты
         if (data.tek_activ_igrok.obj_army_list.Count > 0)
         {
-            data.set_st_f_point(kursor.transform.position);
+            data.set_st_f_point_activ_army(kursor.transform.position);
             //data.set_st_f_point(data.get_activ_unit().transform.position, kursor.transform.position);
             create_put(data.st_p, data.fin_p);//создаем путь на основе стартовой и конечной точке
         }
@@ -82,27 +84,10 @@ public class mouse : MonoBehaviour
 
     void create_put(Vector2Int st, Vector2Int f)
     {
-        item_cell tek_cel = data.kletki[st.x,st.y];//текущая ячейка
-        //Debug.Log("стартовая клетка - "+tek_cel.kordinat);
-        finish_cell = data.kletki[f.x, f.y];//финишная ячейка
-        bool end_put = true;
-        while (end_put)//пока не найден конец пути
-        {
-            
-            open_list = create_open_list(tek_cel);//создаем очередной открытый список
-            //если очередной отрытый список содержит финишную ячейку ты мы нашли все ячейки пути
-            if (open_list.Contains(finish_cell)) 
-            { 
-                //close_list.Add(finish_cell); //финишную клетку тоже добавим в список пути
-                end_put = true;
-                break; 
-            }
-            tek_cel = find_new_tek_cell(open_list);
-            close_list.Add(tek_cel);
-        }
-        
+        close_list = data.game_s.get_put_cell(data.get_activ_army().koordinat, kursor.transform.position);
         int count_hod = data.get_activ_army().tek_hod;//оставшееся количесвто ходов юнита
         bool can_hod = true;
+        finish_cell = data.kletki[f.x, f.y];//финишная ячейка
         foreach (item_cell cell in close_list)
         {
             GameObject p;
@@ -129,55 +114,34 @@ public class mouse : MonoBehaviour
             data.get_activ_army().tek_hod_tmp = count_hod;
         }
     }
-
-    item_cell find_new_tek_cell(List<item_cell> list_op_c)
-    {
+    public void culkulate_nex_put()
+    {//!!тест
+        GameObject p;
+        foreach (GameObject pt in spisok_puti) Destroy(pt);
+        spisok_puti.Clear();
+        count_test++;
+        List<city> tmp_city_list = data.game_s.get_city_list();
+        if (count_test >= tmp_city_list.Count) count_test = 0;
+        data.tek_activ_igrok.calculate_put(data.get_activ_army(), tmp_city_list[count_test]);
+        List<item_cell> cell_list = data.tek_activ_igrok.bot_put_cell_list;
+        Vector3 tmp_v = tmp_city_list[count_test].min_kkor;
+        kursor.gameObject.SetActive(true);
+        kursor.transform.position = tmp_v;//перемещаем курсор
+        MousePos = tmp_v;
+        MousePos.z = -10f;
+        data.move_cam(MousePos);//перемещаем камеру
         
-        item_cell tek_cel_new= list_op_c[0];
-        int min_weigth = tek_cel_new.weight;
-        foreach(item_cell cell in list_op_c)
+        foreach (item_cell cell in cell_list)
         {
-            if (cell.weight <= min_weigth)
-            {
-                tek_cel_new = cell;//нашли очередную текущую ячейку с минимальным путем
-                min_weigth = cell.weight;//обновим минимум;
-            }
+            p = (GameObject)Instantiate(point_put, new Vector3(cell.kordinat.x, cell.kordinat.y, -2.0f), Quaternion.identity);
+            spisok_puti.Add(p);
         }
-        
-        return tek_cel_new;
-        throw new NotImplementedException();
+    }
+    public GameObject get_kursor()
+    {//получение ссылки на курсор
+        return kursor;
     }
 
-    List<item_cell> create_open_list(item_cell tek_cel_old)
-    {
-        
-        List<item_cell> open_list_new = new List<item_cell>();// новый откртый список клеток
-        int min_indx_x = tek_cel_old.idx_kor.x - 1;
-        int max_indx_x = tek_cel_old.idx_kor.x + 1;
-        int min_indx_y = tek_cel_old.idx_kor.y - 1;
-        int max_indx_y = tek_cel_old.idx_kor.y + 1;
-        //проверим чтобы не вывалится за края массива клеток
-        if (min_indx_x < data.min_kletka_x) min_indx_x = 0;
-        if (min_indx_y < data.min_kletka_y) min_indx_y = 0;
-        if (max_indx_x > data.max_kletka_x) max_indx_x = 17;
-        if (max_indx_y > data.max_kletka_y) max_indx_y = 17;
-        for (int i= min_indx_x;i<= max_indx_x;i++)
-            for (int j = min_indx_y; j <= max_indx_y; j++)
-            {
-                item_cell cell = data.kletki[i,j];//получаем очередную клетку
-                if (close_list.Contains(cell)) continue;//эта клетка в закртыом списке, пропускаем продолжаме перебор
-                if (cell.id== tek_cel_old.id) continue;//эта клетка текущая, пропускаем продолжаем перебор
-                else
-                {
-                    cell.set_aproxim(finish_cell);//высчитываем апрокусиму для клетки
-                    cell.set_weight();//высчитаем вес клетки
-                    open_list_new.Add(cell);//добавляем в открытый список
-                }
-            }
-         return open_list_new;
-        throw new NotImplementedException();
-    }
-   
 
 }
 

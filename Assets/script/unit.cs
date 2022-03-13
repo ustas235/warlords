@@ -26,6 +26,7 @@ public class unit : MonoBehaviour
     public s_army sc_army;//ссылка на армию
     public int id_unit = 0;//уникальный номер юнита
     public bool flag_life = true;//флаг что юнит живой
+    public int status_untit = 0;//статус юнита 0 свободен, 1 - в нарнизоне, 2 -  в армии атаки
     private void Awake()
     {
         
@@ -132,5 +133,10 @@ public class unit : MonoBehaviour
                 num = i;
         if (num >=0) 
             u_list.RemoveAt(num);
+    }
+    public void destroy_unit()
+    {//методу удаления мертвых юнитов
+        Destroy(flag);
+        Destroy(this);
     }
 }

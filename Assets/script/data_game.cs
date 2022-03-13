@@ -8,18 +8,19 @@ public class data_game : MonoBehaviour
     // Start is called before the first frame update
     //setting game--------------------------
     public int start_money = 100;//стартовый капитал
-    public int count_player=4;//количесвто игроков
+    int count_player = 2;//количесвто игроков
     //-----------------------
     private unit activ_unit;//активный юнит
+    private bool is_army_move = false;//флаг что арми€ находитс€ в движении
     private s_army activ_army;//активна€ арми€
     public city activ_city;//активный город
     public game game_s;//класс со скриптом игры
     public s_army def_army;//защищиающа€с€ арми€
-    public city def_city;//защищиающийс€ город
+    city def_city;//защищиающийс€ город
     public int type_event = 1;//текущее событие 1-перемещение, 2 атака, 3 атака города
     public gamer tek_activ_igrok;
     public item_cell can_move_cell;//€чейка, до которой юниту хватит очков хода
-    public List<item_cell> can_move_cell_list = new List<item_cell>();//список €чеек куда может жойти юнит
+    public List<item_cell> can_move_cell_list = new List<item_cell>();//список €чеек куда может пойти юнит
     public List<GameObject> spisok_puti;//список объектов пути
     public Camera Cam;//камера
     public GameObject city_window;//окно города
@@ -64,7 +65,7 @@ public class data_game : MonoBehaviour
                 ic.set_indx(new Vector2Int(i, j));
                 kletki[i, j] = ic;
                 kletki[i, j].set_kordinat(new Vector2(grid_x[i], grid_y[j]));//заполн€ем индексы и координаты клеток
-                kletki[i, j].set_cost_move(2);//стоимость движени€ по клеткам 20
+                kletki[i, j].set_cost_move(2);//стоимость движени€ по клеткам 2х
                 kletki[i, j].id = count;//у каждой клетки совй номер
                 if ((j == 2) & (((i > 2) & (i < 8)) || ((i > 9) & (i < 15)))) kletki[i, j].set_cost_move(1);//дорога
                 if ((j == 9) & (((i > 2) & (i < 8)) || ((i > 9) & (i < 15)))) kletki[i, j].set_cost_move(1);//дорога
@@ -130,8 +131,8 @@ public class data_game : MonoBehaviour
         }
         return new Vector3(x_g, y_g, z_p);
     }
-    public void set_st_f_point( Vector3 point_f)//функкц€ установки стартовой финишной точки дл€ поиска пути, получает координаты старотовой точки и запоминает их индекс
-    {
+    public void set_st_f_point_activ_army( Vector3 point_f)//функкц€ установки стартовой финишной точки дл€ поиска пути, получает координаты старотовой точки и запоминает их индекс
+    {//дл€ активной армии
         Vector3 point_s = get_activ_army().transform.position;
         for (int i = 0; i < 18; i++)//перебираем массивы сточкми
         {
@@ -144,6 +145,21 @@ public class data_game : MonoBehaviour
             if (grid_y[i] == point_f.y) 
                 fin_p.y = i;//ищем финиш y
         }
+
+    }
+    public void set_st_f_point(Vector3 start, Vector3 finish)//функкц€ установки стартовой финишной точки дл€ поиска пути, получает координаты старотовой и финишной точки 
+    {//дл€ любой пары точек
+        for (int i = 0; i < 18; i++)//перебираем массивы сточкми
+        {
+            if (Math.Abs(grid_x[i] - start.x)<0.01)
+                st_p.x = i;//ищем старт х
+            if (Math.Abs(grid_x[i] - finish.x) < 0.01)
+                fin_p.x = i;//ищем финиш х
+            if (Math.Abs(grid_y[i] - start.y) < 0.01)
+                st_p.y = i;//ищем старт y
+            if (Math.Abs(grid_y[i] - finish.y) < 0.01)
+                fin_p.y = i;//ищем финиш y
+       }
 
     }
     //перемещение камеры к нужному объекту
@@ -178,7 +194,29 @@ public class data_game : MonoBehaviour
             }
         }
         units_panel_s.set_panel_unit(point_unit_list);
-        
-        
+    }
+    public void set_count_players(int n)
+    {
+        count_player = n;
+    }
+    public int get_count_players()
+    {
+        return count_player;
+    }
+    public void set_def_city(city c)
+    {
+        def_city = c;
+    }
+    public city get_def_city()
+    {
+        return def_city;
+    }
+    public bool get_flag_army_is_move()
+    {//получить флаг состо€тни€ движени€ армий
+        return is_army_move;
+    }
+    public void set_flag_army_is_move(bool f)
+    {//установить флаг состо€тни€ движени€ армий
+        is_army_move=f;
     }
 }

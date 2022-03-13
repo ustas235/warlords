@@ -1,16 +1,31 @@
 fileFormatVersion: 2
-guid: af2a1a434b56ea7419e6fd9cdfe343df
+guid: 1bc15289fd6370a4c9571c60389d7a15
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8030984627780044120
-    second: zel_0
+      213: -2844297981093111289
+    second: flag_orang_0
   - first:
-      213: -5038743127941128067
-    second: zel_1
+      213: 7105504652790003519
+    second: flag_orang_1
   - first:
-      213: 975444489567448472
-    second: zel_2
+      213: -5217366253887680619
+    second: flag_orang_2
+  - first:
+      213: -2008768356688833564
+    second: flag_orang_3
+  - first:
+      213: 1671442054465766176
+    second: flag_orang_4
+  - first:
+      213: -7204184374111225633
+    second: flag_orang_5
+  - first:
+      213: -6503967081009562015
+    second: flag_orang_6
+  - first:
+      213: 2828329508979596964
+    second: flag_orang_7
   externalObjects: {}
   serializedVersion: 11
   mipmaps:
@@ -113,13 +128,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: zel_0
+      name: flag_orang_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 32
-        height: 29
+        width: 40
+        height: 35
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -127,20 +142,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 855c37f08f9c37f60800000000000000
-      internalID: 8030984627780044120
+      spriteID: 70a95915e060788d0800000000000000
+      internalID: -2844297981093111289
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: zel_1
+      name: flag_orang_1
       rect:
         serializedVersion: 2
-        x: 32
+        x: 40
         y: 0
-        width: 32
-        height: 29
+        width: 40
+        height: 35
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -148,20 +163,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: d70e0a052d9c21ab0800000000000000
-      internalID: -5038743127941128067
+      spriteID: f37fe6bc5d2db9260800000000000000
+      internalID: 7105504652790003519
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: zel_2
+      name: flag_orang_2
       rect:
         serializedVersion: 2
-        x: 64
+        x: 80
         y: 0
-        width: 32
-        height: 29
+        width: 40
+        height: 35
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -169,8 +184,113 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 89da7ca5899798d00800000000000000
-      internalID: 975444489567448472
+      spriteID: 59f0aede8013897b0800000000000000
+      internalID: -5217366253887680619
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_orang_3
+      rect:
+        serializedVersion: 2
+        x: 120
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4e3548f82db6f14e0800000000000000
+      internalID: -2008768356688833564
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_orang_4
+      rect:
+        serializedVersion: 2
+        x: 160
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 023c41f51b7223710800000000000000
+      internalID: 1671442054465766176
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_orang_5
+      rect:
+        serializedVersion: 2
+        x: 200
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fd83eac2b78950c90800000000000000
+      internalID: -7204184374111225633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_orang_6
+      rect:
+        serializedVersion: 2
+        x: 240
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 16e379936644db5a0800000000000000
+      internalID: -6503967081009562015
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flag_orang_7
+      rect:
+        serializedVersion: 2
+        x: 280
+        y: 0
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 4aedb7a04be304720800000000000000
+      internalID: 2828329508979596964
       vertices: []
       indices: 
       edges: []
@@ -186,9 +306,14 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      zel_1: -5038743127941128067
-      zel_0: 8030984627780044120
-      zel_2: 975444489567448472
+      flag_orang_4: 1671442054465766176
+      flag_orang_2: -5217366253887680619
+      flag_orang_3: -2008768356688833564
+      flag_orang_7: 2828329508979596964
+      flag_orang_6: -6503967081009562015
+      flag_orang_5: -7204184374111225633
+      flag_orang_1: 7105504652790003519
+      flag_orang_0: -2844297981093111289
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

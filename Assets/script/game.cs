@@ -23,6 +23,7 @@ public class game : MonoBehaviour
     List<Sprite[]> spr_list_unit_off = new List<Sprite[]>();//список со спратами выключенных юнитов
     int index_unit = 0;//счетчик для перебора юнитов
     public int id = 0;
+    
     void Start()
     {
         GameObject obj_player = GameObject.Find("land");
@@ -75,50 +76,54 @@ public class game : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        data.tek_activ_igrok.get_move_to_target();//повторяем вызов перемещения у активного игрока
     }
     public void end_turn()//обработка кнопки конца хода
     {
-        foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
-
-        int next = data.tek_activ_igrok.id;
-        int count = 0;//ограничитель количества кругов
-        while (count < 20)//ищем очередного игрока
+        if (!data.get_flag_army_is_move())//если нет армий в пути сможем завершить ход
         {
-            next++;
-            count++;
-            if (next >= gamer_list.Count) next = 1;
-            if (gamer_list[next].still_play)
+            foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
+
+            int next = data.tek_activ_igrok.id;
+            int count = 0;//ограничитель количества кругов
+            while (count < 20)//ищем очередного игрока
             {
-                gamer_list[next].active = true;
-                num_tek_igrok = next;
-                //ходы юнитов игрока на максимум
-                foreach (s_army army in gamer_list[next].s_army_list) 
-                    army.reboot_count_hod();//обновляем ходы в армиях
-                //итерация производства юнитов во всех городах игрока
-                foreach (city c in gamer_list[next].city_list) c.create_unit();
-                break;
-            }
-            
-        }
-        print("Ходит игрок  " + num_tek_igrok);
-        butt_end.GetComponentInChildren<Text>().text = num_tek_igrok.ToString();//тест покажем номер активного игрока
-        data.tek_activ_igrok = gamer_list[num_tek_igrok];//сохраним в дате текущего игрока
-        //переведем камеру на юныты игрока
-        if (data.tek_activ_igrok.obj_army_list.Count > 0)
-        {
-            //Vector3 tmp_vect=data.tek_activ_igrok.unit_list[0]
-            data.move_cam(data.tek_activ_igrok.s_army_list[0].koordinat);
-            data.set_activ_army(data.tek_activ_igrok.s_army_list[0]);
-            index_unit = 0;
-        }//либо на первый город
-        else
-        {
-            if (data.tek_activ_igrok.city_list.Count > 0) data.move_cam(data.tek_activ_igrok.city_list[0].koordinat);
-        }
-        if (data.tek_activ_igrok.bot_flag) data.tek_activ_igrok.action_bot();//если бут то пусть он сам играет
+                next++;
+                count++;
+                if (next >= gamer_list.Count) next = 1;
+                if (gamer_list[next].still_play)
+                {
+                    gamer_list[next].active = true;
+                    num_tek_igrok = next;
+                    //ходы юнитов игрока на максимум
+                    foreach (s_army army in gamer_list[next].s_army_list)
+                        army.reboot_count_hod();//обновляем ходы в армиях
+                                                //итерация производства юнитов во всех городах игрока
+                    foreach (city c in gamer_list[next].city_list) c.create_unit();
+                    break;
+                }
 
+            }
+            print("Ходит игрок  " + num_tek_igrok);
+            butt_end.GetComponentInChildren<Text>().text = num_tek_igrok.ToString();//тест покажем номер активного игрока
+            data.tek_activ_igrok = gamer_list[num_tek_igrok];//сохраним в дате текущего игрока
+                                                             //переведем камеру на юныты игрока
+            if (data.tek_activ_igrok.obj_army_list.Count > 0)
+            {
+                //Vector3 tmp_vect=data.tek_activ_igrok.unit_list[0]
+                data.move_cam(data.tek_activ_igrok.s_army_list[0].koordinat);
+                data.set_activ_army(data.tek_activ_igrok.s_army_list[0]);
+                index_unit = 0;
+            }//либо на первый город
+            else
+            {
+                if (data.tek_activ_igrok.city_list.Count > 0) data.move_cam(data.tek_activ_igrok.city_list[0].koordinat);
+            }
+            if (data.tek_activ_igrok.bot_flag) data.tek_activ_igrok.action_bot();//если бут то пусть он сам играет
+        }
     }
+    //тест!!!
+    
     public void deselect_button()// обработка кнопки нет активного юнита
     {
         data.set_activ_army(null);
@@ -127,6 +132,7 @@ public class game : MonoBehaviour
     }
     public void next_unit_button()// обработка кнопки перебор юнитов
     {
+        
         // поиск следующего юнита для активации 
         if (data.tek_activ_igrok.obj_army_list.Count > 0)
         {
@@ -140,7 +146,7 @@ public class game : MonoBehaviour
     }
     public void create_gamers()//создание игроков
     {
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < (data.get_count_players()+1); i++)
         {
             gamer tmp_gamer;
             //боты играют за игроков начиная со второго
@@ -152,6 +158,8 @@ public class game : MonoBehaviour
     }
     public void initial_place()//старотвая расстановка юнитов и городов
     {
+        obj_mouse.kursor.SetActive(true);//для того чтобы сработал метод старт в move
+        obj_mouse.kursor.SetActive(false);
         Vector2[] list_city_kor = new Vector2[9];
         list_city_kor[0] = new Vector2(-2.8f, 2.8f);
         list_city_kor[1] = new Vector2(0f, 2.8f);
@@ -180,10 +188,10 @@ public class game : MonoBehaviour
         change_city_player(0, 7);
         change_city_player(1, 0);
         change_city_player(2, 2);
-        change_city_player(3, 6);
-        change_city_player(4, 8);
+        if (data.get_count_players() > 2) change_city_player(3, 6);
+        if (data.get_count_players() > 3) change_city_player(4, 8);
         //даем стартовые юниты игрокам
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < (data.get_count_players() + 1); i++)
         {
             //координаты места где должен появится новый юниит
             //перебираем города игрока и закидываем туда стартовые юниты
@@ -226,9 +234,9 @@ public class game : MonoBehaviour
         gamer_list[u.vladelec.id].s_army_list.Add(tmp_army_s);//скриптов к объектам
         
     }
-    public Sprite get_sprite_unit(int num_igrok, int nim_type)//получение спрайта юнита по номеру игрока и номеру юнита
+    public Sprite get_sprite_unit(int num_igrok, int num_type)//получение спрайта юнита по номеру игрока и номеру юнита
     {
-        return spr_list_unit[num_igrok][nim_type];
+        return spr_list_unit[num_igrok][num_type];
     }
     public Sprite[] get_sprite_flag(int num_igrok)//получение спрайтов флага по номеру игрока
     {
@@ -283,11 +291,122 @@ public class game : MonoBehaviour
             }
         }
         //если все защитники пали и была защита города, то город передается новому владельцу
-        if ((unit_list_def.Count<1) & (data.def_city != null)) data.def_city.change_vladelec(unit_list_atack[0].vladelec);
-        data.def_city = null;//сбросим ссылку на защ город
+        if ((unit_list_def.Count<1) & (data.get_def_city() != null)) data.get_def_city().change_vladelec(unit_list_atack[0].vladelec);
+        data.set_def_city(null);//сбросим ссылку на защ город
         //unit_list_atack.Clear();
         //unit_list_def.Clear();
         data.setting_panel_unit();//настроим панель с юнитами
     }
-    
+    public List<city> get_city_list()
+    {//метод получения списка городов
+        List<city> tmp_city_list = new List<city>();
+        foreach (GameObject city_obj in city_obj_list)
+        {
+            tmp_city_list.Add(city_obj.GetComponent(typeof(city)) as city);
+        }
+        return tmp_city_list;
+    }
+    public List<city> get_city_list_other()
+    {//метод получения списка городов других игроков (принадлежащих игрокам-противника активного игорока)
+        List<city> tmp_city_list = new List<city>();
+        foreach (GameObject city_obj in city_obj_list)
+        {
+            city tmp_city = city_obj.GetComponent(typeof(city)) as city;
+            if (tmp_city.vladelec.id!=data.tek_activ_igrok.id)
+                tmp_city_list.Add(tmp_city);
+        }
+        return tmp_city_list;
+    }
+    public List <item_cell> get_put_cell(Vector3 start, Vector3 finish)
+    {//метод поиска пути между двумя точкам, возвращает список ячеек по которым проходит кратчайший путь
+        List<item_cell> put_cell_list;//список клеток пути
+        data.set_st_f_point(start, finish);//(vector2int)  data.st_p, data.fin_p получат индексы старотовых и финишнх точек
+        item_cell tek_cel = data.kletki[data.st_p.x, data.st_p.y];//текущая ячейка
+        item_cell finish_cell = data.kletki[data.fin_p.x, data.fin_p.y];//финишная ячейка
+        List<item_cell> open_list;//откртый список клеток
+        List<item_cell> close_list = new List<item_cell>();//закрыты список клеток
+        bool end_put = true;
+        while (end_put)//пока не найден конец пути
+        {
+            open_list = create_open_list(tek_cel);//создаем очередной открытый список
+            //если очередной отрытый список содержит финишную ячейку ты мы нашли все ячейки пути
+            if (open_list.Contains(finish_cell))
+            {
+                //close_list.Add(finish_cell); //финишную клетку тоже добавим в список пути
+                end_put = true;
+                break;
+            }
+            tek_cel = find_new_tek_cell(open_list);
+            close_list.Add(tek_cel);
+        }
+        put_cell_list = close_list;
+        return put_cell_list;
+        //создание открытого списка клеток
+        List<item_cell> create_open_list(item_cell tek_cel_old)
+        {
+
+            List<item_cell> open_list_new = new List<item_cell>();// новый откртый список клеток
+            int min_indx_x = tek_cel_old.idx_kor.x - 1;
+            int max_indx_x = tek_cel_old.idx_kor.x + 1;
+            int min_indx_y = tek_cel_old.idx_kor.y - 1;
+            int max_indx_y = tek_cel_old.idx_kor.y + 1;
+            //проверим чтобы не вывалится за края массива клеток
+            if (min_indx_x < data.min_kletka_x) min_indx_x = 0;
+            if (min_indx_y < data.min_kletka_y) min_indx_y = 0;
+            if (max_indx_x > data.max_kletka_x) max_indx_x = 17;
+            if (max_indx_y > data.max_kletka_y) max_indx_y = 17;
+            for (int i = min_indx_x; i <= max_indx_x; i++)
+                for (int j = min_indx_y; j <= max_indx_y; j++)
+                {
+                    item_cell cell = data.kletki[i, j];//получаем очередную клетку
+                    if (close_list.Contains(cell)) continue;//эта клетка в закртыом списке, пропускаем продолжаме перебор
+                    if (cell.id == tek_cel_old.id) continue;//эта клетка текущая, пропускаем продолжаем перебор
+                    else
+                    {
+                        cell.set_aproxim(finish_cell);//высчитываем апрокусиму для клетки
+                        cell.set_weight();//высчитаем вес клетки
+                        open_list_new.Add(cell);//добавляем в открытый список
+                    }
+                }
+            return open_list_new;
+            //throw new NotImplementedException();
+        }
+        //поиск новой текущей клетки
+        item_cell find_new_tek_cell(List<item_cell> list_op_c)
+        {
+            item_cell tek_cel_new = list_op_c[0];
+            int min_weigth = tek_cel_new.weight;
+            foreach (item_cell cell in list_op_c)
+            {
+                if (cell.weight <= min_weigth)
+                {
+                    tek_cel_new = cell;//нашли очередную текущую ячейку с минимальным путем
+                    min_weigth = cell.weight;//обновим минимум;
+                }
+            }
+
+            return tek_cel_new;
+            //throw new NotImplementedException();
+        }
+    }
+    public void bot_atack_target(Vector3 target)
+    {
+        bot_klick_mouse(3,target);//имитируем клик мышки с типом атаки на город
+        bot_klick_kursor();
+        
+    }
+    public void bot_klick_mouse(int type_event, Vector3 koor_clk)
+    {//имитация клика мышки ботом, чтобы поставить курсор
+        data.type_event = type_event;//тип события бля дальнейшей обработки
+        koor_clk.z = 2.1f;
+        obj_mouse.kursor.transform.position = data.get_grid_step(koor_clk);//перемещаем курсор
+        obj_mouse.mouse_event(type_event);
+    }
+    public void bot_klick_kursor()
+    {//имитация клика мышки ботом, чтобы переместится к курсору
+        GameObject kr = obj_mouse.kursor;
+        move mv= kr.GetComponent(typeof(move)) as move;
+        mv.start_move();//начло движения
+    }
+   
 }
