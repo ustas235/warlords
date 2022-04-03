@@ -65,7 +65,7 @@ public class mouse : MonoBehaviour
         //for (int i=0;i< spisok_puti.Count;i++)
         foreach (GameObject p in spisok_puti) Destroy(p);
         spisok_puti.Clear();
-        if (!data.tek_activ_igrok.bot_flag)
+        if (!data.get_activ_igrok().bot_flag)
         {//если метод вызвал бот, то эти настройки он сделает сам
             MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             MousePos.z = -2.1f;
@@ -74,7 +74,7 @@ public class mouse : MonoBehaviour
         kursor.gameObject.SetActive(true);
         //установка стартовой и конечной точки
         //если у игрока есть юниты
-        if (data.tek_activ_igrok.obj_army_list.Count > 0)
+        if (data.get_activ_igrok().obj_army_list.Count > 0)
         {
             data.set_st_f_point_activ_army(kursor.transform.position);
             //data.set_st_f_point(data.get_activ_unit().transform.position, kursor.transform.position);
@@ -122,8 +122,8 @@ public class mouse : MonoBehaviour
         count_test++;
         List<city> tmp_city_list = data.game_s.get_city_list();
         if (count_test >= tmp_city_list.Count) count_test = 0;
-        data.tek_activ_igrok.calculate_put(data.get_activ_army(), tmp_city_list[count_test]);
-        List<item_cell> cell_list = data.tek_activ_igrok.bot_put_cell_list;
+        data.get_activ_igrok().calculate_put(data.get_activ_army(), tmp_city_list[count_test]);
+        List<item_cell> cell_list = data.get_activ_igrok().bot_put_cell_list;
         Vector3 tmp_v = tmp_city_list[count_test].min_kkor;
         kursor.gameObject.SetActive(true);
         kursor.transform.position = tmp_v;//перемещаем курсор

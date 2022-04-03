@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 public class move : MonoBehaviour
 {
     public GameObject kursor;
-    item_cell next_cell;
+    item_cell next_cell, prev_cell;
     Vector3 MousePos = new Vector3(-2.5f, -1.7f, 0f);
     public data_game data;//класс где буду хранится все данные игры
     // Start is called before the first frame update
@@ -24,9 +24,12 @@ public class move : MonoBehaviour
     }
     private void OnMouseDown()
     {
-        if ((!EventSystem.current.IsPointerOverGameObject()) & (data.get_activ_army() != null))
-        {
-            start_move();
+        if (!data.get_flag_army_is_move())
+        {//если нет армий в движении
+            if ((!EventSystem.current.IsPointerOverGameObject()) & (data.get_activ_army() != null))
+            {
+                start_move();
+            }
         }
     }
     public void start_move()
@@ -47,39 +50,60 @@ public class move : MonoBehaviour
         kursor.transform.position = new Vector3(kursor.transform.position.x, kursor.transform.position.y, -5.0f);//задвинем курсор
         foreach (item_cell c in data.can_move_cell_list)
         {
-            
+            prev_cell = next_cell;
             next_cell = c;
+            Vector3 old_koordinat = data.get_activ_army().koordinat;//запомним предыдущие координаты армии
             data.get_activ_army().move_army(next_cell.koordint3x);//перемещаем армию в очередную ячейку
+            data.game_s.set_sprite_army_flag(data.get_activ_army().vladelec,next_cell.koordint3x);//настроим отображение армми и флага в новой клетке
+            data.game_s.set_sprite_army_flag(data.get_activ_army().vladelec, old_koordinat);//настроим отображение армми и флага в старой клетке
+            //пересчитаем ходы
+            int delta_hod = c.get_cost_move();//посчитаем затраченные ходы
+            data.get_activ_army().update_count_hod(delta_hod);//обновим количесвто ходов у юнитов в армии
+            data.get_activ_army().set_army();//обновим настройки армии*/
+            data.setting_panel_unit(); //настраиваем панель с юнитами
             //тут нужна задержка
             yield return new WaitForSeconds(0.2f);
 
         }
         kursor.gameObject.SetActive(false);
         data.move_cam(data.get_activ_army().koordinat);//перемещаем камеру
-        data.setting_panel_unit(); //настраиваем панель с юнитами
-        int delta_hod = data.get_activ_army().tek_hod - data.get_activ_army().tek_hod_tmp;//посчитаем затраченные ходы
+        //data.setting_panel_unit(); //настраиваем панель с юнитами
+        /*int delta_hod = data.get_activ_army().tek_hod - data.get_activ_army().tek_hod_tmp;//посчитаем затраченные ходы
         data.get_activ_army().update_count_hod(delta_hod);//обновим количесвто ходов у юнитов в армии
-        data.get_activ_army().set_army();//обновим настройки ирмии
+        data.get_activ_army().set_army();//обновим настройки армии*/
         //в конце движения очистим списки движения
         data.can_move_cell_list.Clear();
         
         //data.get_activ_army().tek_hod = data.get_activ_army().tek_hod_tmp;//обновим остаток ходов после перемещения
-        if (data.type_event == 2) //начинаем атаку на другую армию
-        {
-            data.get_activ_army().set_status(0);//статус армии становиттся свободным
-            //если добрались до противника начнется бой
-            if (data.get_activ_army().check_koordinat(kursor.transform.position)) data.get_activ_army().attack_event_army(); //координаты армии и защитника совпали - начался бой
-            else data.set_flag_army_is_move(false);//если не дошли но ходы закончились после окончание движения дадим об это знать
+        switch (data.type_event)
+        {//дейсвтия в зависимости от типа движения
+            case 1://просто движение, после его оконяания
+                if (data.get_activ_army().check_koordinat(kursor.transform.position))
+                {  //если добрались до точки назначения
+                    if (data.get_activ_army().get_status()==4) //если статус армии был поход в свой город то сделаем ее свободной
+                        data.get_activ_army().set_status(0);//статус армии становиттся свободным
+                }
+                data.set_flag_army_is_move(false);//после окончание движения дадим об это знать
+                break;
+            case 2:// атака на другую армию
+                if (data.get_activ_army().check_koordinat(kursor.transform.position))
+                {  //если добрались до противника начнется бой
+                    data.get_activ_army().attack_event_army(); //координаты армии и защитника совпали - начался бой
+                    
+                }
+                else data.set_flag_army_is_move(false);//если не дошли но ходы закончились после окончание движения дадим об это знать
+                break;
+            case 3:// атака на город
+                if (data.get_activ_army().check_koordinat(kursor.transform.position))
+                {//если добрались до противника начнется бой
+                    data.get_activ_army().attack_event_city();//начинаем атаку на другой город
+                }
+                else data.set_flag_army_is_move(false);//если не дошли но ходы закончились после окончание движения дадим об это знать
+                break;
+            default://хз что
+                data.set_flag_army_is_move(false);//после окончание движения дадим об это знать
+                break;
         }
-        if (data.type_event == 3) //начинаем атаку на город
-        {
-            //если добрались до противника начнется бой
-            data.get_activ_army().set_status(0);//статус армии становиттся свободным
-            if (data.get_activ_army().check_koordinat(kursor.transform.position)) data.get_activ_army().attack_event_city();//начинаем атаку на другой город
-            else data.set_flag_army_is_move(false);//если не дошли но ходы закончились после окончание движения дадим об это знать
-        }
-        if (data.type_event == 1)
-            data.set_flag_army_is_move(false);//после окончание движения дадим об это знать
     }
    
 }

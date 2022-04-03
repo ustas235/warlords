@@ -9,6 +9,7 @@ public class s_panel_unit : MonoBehaviour
     public Sprite[] spr_on= new Sprite[8];
     public Sprite[] spr_off= new Sprite[8];
     List <GameObject> buttons_unit=new List<GameObject>();//список объектов кнопок
+    List<GameObject> text_hod_count = new List<GameObject>();//список объектов текст с количеством ходов юнитов
     List<bool> flags = new List<bool>();//флаги состо€ни€ кнопки
     List <unit> s_unit_list;//список переданных армий
     // Start is called before the first frame update
@@ -20,6 +21,9 @@ public class s_panel_unit : MonoBehaviour
         {
             string tmp = "but_unit_" + i.ToString();
             buttons_unit.Add(this.transform.Find(tmp).gameObject);//добавим в массив 8 кнопок
+            tmp = "text_hod_" + i.ToString();
+            text_hod_count.Add(this.transform.Find(tmp).gameObject);//добавим в массив 8 текстов
+            text_hod_count[i].SetActive(false);//пока спр€чем весь текст
             flags.Add(false);//пока все флаги сбросим
         }
         GameObject obj_player = GameObject.Find("land");
@@ -103,19 +107,28 @@ public class s_panel_unit : MonoBehaviour
             {
                 spr_on[i] = unit_list[i].spr_unit;
                 spr_off[i] = unit_list[i].spr_unit_off;
-                if (unit_list[i].contains_to_list(data.get_activ_army().unit_list))
+                if (unit_list[i].contains_to_list(data.get_activ_army().get_unit_list()))
                 {
                     buttons_unit[i].GetComponent<Image>().sprite = spr_on[i];//все из активной армии включены
+                    text_hod_count[i].SetActive(true);//покажем соотв тект
+                    text_hod_count[i].GetComponent<Text>().text = unit_list[i].get_tek_hod().ToString();//вывечем число ходов
                     flags[i] = true;
                 }
                 else
                 {
                     buttons_unit[i].GetComponent<Image>().sprite = spr_off[i];
                     flags[i] = false;
+                    text_hod_count[i].SetActive(true);//покажем соотв тект
+                    text_hod_count[i].GetComponent<Text>().text = unit_list[i].get_tek_hod().ToString();//вывечем число ходов
                 }
                 buttons_unit[i].SetActive(true);//покажем кнопку
+
             }
-            else buttons_unit[i].SetActive(false);
+            else
+            {
+                buttons_unit[i].SetActive(false);
+                text_hod_count[i].SetActive(false);//спр€чем соотв тект
+            }
         }
     }
 }

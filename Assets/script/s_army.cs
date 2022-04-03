@@ -9,27 +9,36 @@ public class s_army : MonoBehaviour
     // Start is called before the first frame update
     
     public data_game data;//класс где буду хранится все данные игры
-    GameObject obj_army;//ссфлка на объект к которум присоединен скрип
-    
+    GameObject obj_army;//ссылка на объект к которум присоединен скрип
+    public int id;//номер армии
     mouse obj_mouse;//объект с скриптами мыши
-    public int strength;//сила
-    public int max_hod;//количество ходов максимальное
+    int strength;//сила
+    int max_unit_strenght;//сила максимального юнита
+   // public int max_hod;//количество ходов максимальное
     public int tek_hod;//количество ходов текущее
     public int tek_hod_tmp;//количество ходов временное, после перемещения данное значение переместится в тек ход
     public gamer vladelec;//владелец армии
     public Sprite spr_army;//спрайт армии
+    public GameObject army_flag;//cссылка на флаг армии
+    public Sprite[] flags_sprites = new Sprite[8];//массив со спратами флагов
     public Vector3 koordinat;//координаты армии
-    public List<unit> unit_list=new List<unit>();//список юнитов в армии
+    List<unit> unit_list=new List<unit>();//список юнитов в армии
     //для бота
-    public int status_army=0;//статус армии 0 -свободна, 1- в гарнизоне,2 собирается для атаки, 3 идет в атаку
-    public city target_city;//город, который идет/пойдет атаковать армия
+    int status_army=0;//статус армии 0 -свободна, 1- в гарнизоне,2 собирается для атаки, 3 идет в атаку город, 4 идет в один из своих городов, 5 атака на другую армию
+    city target_city;//город, который идет/пойдет атаковать армия
     Vector3 target_koordinat;//координы, куа пойдет атаковать армия
-    void Start()
+    private void Awake()
     {
+       
         GameObject obj_player = GameObject.Find("land");
         //к объекту привязан свой скрипт ищем его
         data = obj_player.GetComponent(typeof(data_game)) as data_game;
         obj_mouse = obj_player.GetComponent(typeof(mouse)) as mouse;
+    }
+
+    void Start()
+    {
+        
 
     }
 
@@ -43,67 +52,91 @@ public class s_army : MonoBehaviour
     {
         if (unit_list.Count>0)
         {
-           
             strength = 0;//сила
-            max_hod = 100;//количество ходов максимальное
+            //max_hod = 100;//количество ходов максимальное
             tek_hod = 100;//количество ходов текущее
             tek_hod_tmp = 100;//количество ходов временное, после перемещения данное значение переместится в тек ход
             koordinat = unit_list[0].koordinat;
             for (int i=0; i< unit_list.Count;i++)
             {
-                if (i == 0)//флаг армии у первого юнита
+                /*if (i == 0)//флаг армии у первого юнита
                 {
                     unit_list[i].flag.SetActive(true);//виден только первый флаг
                     unit_list[i].flag.GetComponent<SpriteRenderer>().sprite = unit_list[i].flags_sprites[unit_list.Count - 1];//размер флага зависит от величины армии
-                }
-                else unit_list[i].flag.SetActive(false);//виден только первый флаг
+                }*/
+                //else unit_list[i].flag.SetActive(false);//виден только первый флаг
 
                 if (unit_list[i].strength >= strength)//ищем самого сильного юнита
                 {
                     strength = unit_list[i].strength;//спрайт армии по самому сильному юниту
+                    max_unit_strenght = unit_list[i].strength;
                     spr_army = unit_list[i].spr_unit;//обновим спрайт армии
                     obj_army.GetComponent<SpriteRenderer>().sprite = spr_army;
                 }
-                if (unit_list[i].max_hod <= max_hod)//макс ход по минимальному из всех
+                /*if (unit_list[i].max_hod <= max_hod)//макс ход по минимальному из всех
                 {
                     max_hod = unit_list[i].max_hod;
-                }
-                if (unit_list[i].tek_hod <= tek_hod)//тек ход ход по минимальному из всех
+                }*/
+                if (unit_list[i].get_tek_hod() <= tek_hod)//тек ход ход по минимальному из всех
                 {
-                    tek_hod = unit_list[i].tek_hod;
+                    tek_hod = unit_list[i].get_tek_hod();
                 }
                 if (unit_list[i].tek_hod_tmp <= tek_hod_tmp)//тек ход ход по минимальному из всех
                 {
                     tek_hod_tmp = unit_list[i].tek_hod_tmp;
                 }
             }
-            
+            data.game_s.set_sprite_army_flag(vladelec, koordinat);//настроим видимость армии
         }
     }
        
-    public void add_unit(unit u)//добавить юнит в армию из другой
+    public bool add_unit(unit u)//добавить юнит в армию из другой
     {
-        //удалим унит из старой армии
-        u.sc_army.sub_unit_destroy(u);
-        
-        //добавим юнит в новую армию
-        unit_list.Add(u);
-        u.sc_army = this;
-        set_army();//настроим армию
+        bool check = false;
+        if (unit_list.Count < 8)
+        {
+            //удалим унит из старой армии
+            if (u.sc_army != null)
+            {
+                u.sc_army.sub_unit_destroy(u);
+            }
+            //добавим юнит в новую армию
+            unit_list.Add(u);
+            u.sc_army = this;
+            set_army();//настроим армию
+            check = true;
+        }
+        else check = false;
+        return check;
     }
     public void sub_unit_create(unit u)//удалить юнит из армии с созданием новой аврмии
     {
         u.remove_unit(unit_list);
-        set_army();//настроим армию 
+        u.sc_army = null;//сотрем информацию остарой армии
         data.game_s.create_new_army(u);//создаем новую армию
+        set_army();//настроим армию после изменений
     }
     public void sub_unit_destroy(unit u)//удалить юнит с удалением армии
     {
-        u.remove_unit(unit_list);
+        //u.remove_unit(unit_list);
+        unit_list.Remove(u);
         if (unit_list.Count == 0)
         {
             vladelec.obj_army_list.Remove(obj_army);//список объектов
             vladelec.s_army_list.Remove(this);//скриптов к объектам
+            Destroy(army_flag);
+            Destroy(obj_army);
+        }
+    }
+    public void unit_destroy(unit u)//убить юнит
+    {
+        unit_list.Remove(u);
+        u.destroy_unit();
+        if (unit_list.Count == 0)
+        {
+            vladelec.obj_army_list.Remove(obj_army);//список объектов
+            vladelec.s_army_list.Remove(this);//скриптов к объектам
+            Destroy(army_flag);
             Destroy(obj_army);
         }
     }
@@ -113,8 +146,8 @@ public class s_army : MonoBehaviour
         foreach (unit u in unit_list)
         {
             u.koordinat = k;//юниты в армии тоже помнят координаты армии
-            u.flag.transform.position = k;//флаг всех юнитов также перемещается
         }
+        army_flag.transform.position = k;
         this.transform.position = k;
         
     }
@@ -133,7 +166,7 @@ public class s_army : MonoBehaviour
             {
                 flag_g = true;
                 def_city = c;//запомним город
-                data.set_def_city(def_city);
+                target_city=def_city;
                 break;
             }
         //если атака идет на гарнизон, проверим нет ли в городе еще войск
@@ -162,12 +195,12 @@ public class s_army : MonoBehaviour
     public void attack_event_city()
     {//метод рсчета атака города (клик по городу)
         //проверим, не идет ли атака на гарнизон города
-        gamer oth_vl = data.get_def_city().vladelec;//защищающийся игрок
+        gamer oth_vl = target_city.vladelec;//защищающийся игрок
         //проверим нет ли в городе еще войск
         List<unit> def_unit = new List<unit>();
         foreach (s_army a in oth_vl.s_army_list)//перебираем все армии защищающегося игрока
         {
-            if (data.get_def_city().is_garnison(a))//если очередная армия в нашем городе
+            if (target_city.is_garnison(a))//если очередная армия в нашем городе
             {
                 foreach (unit u in a.unit_list) def_unit.Add(u);//записываем очередной юнит в гарнизон
             }
@@ -177,6 +210,7 @@ public class s_army : MonoBehaviour
         calkulate_atack(unit_list, def_unit);//делаем расчет атаки и покаже окно
        
     }
+    
     private void OnMouseDown()
     {
         //Debug.Log("Сработал арми");
@@ -184,7 +218,7 @@ public class s_army : MonoBehaviour
         {
             if (data.get_activ_army() == null)
             {
-                if (data.tek_activ_igrok.id == this.vladelec.id)//если армия принадлежит активному игроку
+                if (data.get_activ_igrok().id == this.vladelec.id)//если армия принадлежит активному игроку
                 {
                     data.set_activ_army(this);//при клике юнита он передает в данные активной армии
                     this.transform.position = data.get_grid_step(this.transform.position);//выровним позицию по сетке
@@ -193,7 +227,7 @@ public class s_army : MonoBehaviour
             }
             else
             {
-                if (data.tek_activ_igrok.id != this.vladelec.id)//клик по другой армии - возможно попытка атаки
+                if (data.get_activ_igrok().id != this.vladelec.id)//клик по другой армии - возможно попытка атаки
                 {
                     data.def_army = this;//сохраним себя в защищаемой армии
                     data.type_event = 2; //сохраним тип события бля дальнейшей обработки    
@@ -201,10 +235,13 @@ public class s_army : MonoBehaviour
                     //obj_mouse.do_kursor();
                 }
                 else//юнит союзни переместим на него курсор
-                {
-                    data.type_event = 1;//событие перемещения
-                    obj_mouse.mouse_event(1);//переместим туда курсор
-                    //obj_mouse.do_kursor();
+                { 
+                    if (this.id != data.get_activ_army().id)
+                    {//если клик по другой союзной армии
+                        data.type_event = 1;//событие перемещения
+                        obj_mouse.mouse_event(1);//переместим туда курсор
+                                                 //obj_mouse.do_kursor();
+                    }
                 }
             }
         }
@@ -213,12 +250,17 @@ public class s_army : MonoBehaviour
 
         //set_sprite(1, 1);
     }
+    
     public void set_obj(GameObject g)//установка ссылкни на объект
     {
         obj_army = g;
     }
-    
-   public void calkulate_atack(List<unit> army_a, List<unit> army_d)
+    public GameObject get_obj()//получение ссылкни на объект
+    {
+        return obj_army;
+    }
+
+    public void calkulate_atack(List<unit> army_a, List<unit> army_d)
     {//метод расчета атаки
         int max_count_round = army_a.Count + army_d.Count;//максимальной количесвто боев
         int i_a = 0, i_d = 0;//индексы юнитов атаки и защиты
@@ -247,10 +289,42 @@ public class s_army : MonoBehaviour
             }
             max_count_round--;//предохранитель, если ошиблсь с алгоритмом не уйдем в вечный круг
         }
-        data.atack_panel_s.set_panel_atack(unit_list, flags_a, army_d, flags_d);//покажем результат боя
+        //выберем панель в зависимости от числа обороны
+        int tmp_count = (army_d.Count-1) / 8;
+        int count_unit_panel;
+        switch (tmp_count)
+        {
+            case 0:
+                data.atack_panel_s = data.atack_panel_s_8;
+                data.attack_window = data.attack_window_8;
+                count_unit_panel = 8;
+                break;
+            case 1:
+                data.atack_panel_s = data.atack_panel_s_16;
+                data.attack_window = data.attack_window_16;
+                count_unit_panel = 16;
+                break;
+            case 2:
+                data.atack_panel_s = data.atack_panel_s_24;
+                data.attack_window = data.attack_window_24;
+                count_unit_panel = 24;
+                break;
+            case 4:
+                data.atack_panel_s = data.atack_panel_s_32;
+                data.attack_window = data.attack_window_32;
+                count_unit_panel = 32;
+                break;
+            default:
+                data.atack_panel_s = data.atack_panel_s_32;
+                data.attack_window = data.attack_window_32;
+                count_unit_panel = 32;
+                break;
+
+        }
+        data.atack_panel_s.set_panel_atack(unit_list, flags_a, army_d, flags_d, count_unit_panel);//покажем результат боя
         data.attack_window.SetActive(true);//покажем окно
-        data.game_s.finih_atack(unit_list, flags_a, army_d, flags_d);//удалим убитые юниты
-        set_army();//настроим внешний вид
+        finih_atack(unit_list, flags_a, army_d, flags_d);//удалим убитые юниты
+        
     }
     public bool check_boy(unit a, unit d)
     {//метод расчета боя, возвращает true победитель атакующий, false -защищающийся
@@ -279,15 +353,15 @@ public class s_army : MonoBehaviour
     }
     public void update_count_hod(int delta_hod)
     {//метод обновляет количество оставшихся ходов сех юнитов
-        foreach (unit u in unit_list) u.tek_hod = u.tek_hod - delta_hod;
+        foreach (unit u in unit_list) u.set_tek_hod(u.get_tek_hod() - delta_hod);
 
     }
     public void reboot_count_hod()//сброс количества ходов юнитов
     {//метод обновляет количество оставшихся ходов сех юнитов
         foreach (unit u in unit_list)
         {
-            u.tek_hod = max_hod;
-            u.tek_hod_tmp = max_hod;
+            u.set_tek_hod(u.get_max_hod());
+            u.tek_hod_tmp = u.get_max_hod();
         }
         set_army();
     }
@@ -309,5 +383,55 @@ public class s_army : MonoBehaviour
     {//метод выставляет статус армии и всех входящих юнитов
         status_army = st;
         foreach (unit u in unit_list) u.status_untit = st;
+    }
+    public int get_status()
+    {//метод выставляет статус армии и всех входящих юнитов
+        return status_army;
+    }
+    public void set_target_city(city c)
+    {//установка цели-города для атаки или передвижения
+        target_city = c;
+    }
+    public city get_target_city()
+    {//получение цели-города для атаки или передвижения
+        return target_city;
+    }
+    public void finih_atack(List<unit> unit_list_atack, List<bool> f_a, List<unit> unit_list_def, List<bool> f_d)
+    {//метод обрабатывае результаты боя за город
+        //удалим убитые юниты
+        for (int i = unit_list_atack.Count - 1; i > -1; i--)
+        {
+            if (!f_a[i])
+            {
+                unit_list_atack[i].sc_army.unit_destroy(unit_list_atack[i]);//если юнит убит удалим юнит
+                f_a.RemoveAt(i);
+            }
+        }
+        for (int i = unit_list_def.Count - 1; i > -1; i--)
+        {
+            if (!f_d[i])
+            {
+                unit_list_def[i].sc_army.unit_destroy(unit_list_def[i]);//если юнит убит удалим юнит
+                unit_list_def.Remove(unit_list_def[i]);//т.к. список защитников был сощдан отдель чистим и его
+                f_d.RemoveAt(i);
+            }
+        }
+        //если все защитники пали и была защита города, то город передается новому владельцу
+        if ((unit_list_def.Count < 1) & (status_army == 3))
+        {
+            get_target_city().change_vladelec(vladelec);//меняем владельца города
+            set_target_city(null);//сбросим целевой город
+        }
+        set_status(0);//меняем статус армии
+        set_army();
+        data.setting_panel_unit();//настроим панель с юнитами
+    }
+    public List<unit> get_unit_list()
+    {
+        return unit_list;
+    }
+    public int get_max_unit_str()
+    {
+        return max_unit_strenght;
     }
 }

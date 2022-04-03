@@ -19,8 +19,8 @@ public class gamer : MonoBehaviour//
     public Sprite spr_city;//ссылка на спрат своего города
     //настройки бота
     public bool bot_flag = false;//флаг что играетбот
-    public int bot_army_create_city = 2;//тип войск строимых ботом
-    public int bot_min_garnison = 2;//гарнизон в городе
+    public int bot_army_create_city = 1;//тип войск строимых ботом
+    public int bot_min_garnison = 0;//гарнизон в городе
     public List<item_cell> bot_put_cell_list;//список ячеек пути
     List<item_cell> tmp_bot_put_cell_list;//временный список список ячеек пути (станет постоянным для ближайшего города)
     Vector3 tmp_target_koordinat;//временная точка татаки
@@ -78,17 +78,20 @@ public class gamer : MonoBehaviour//
         //ищем цели для каждой армии атаки
         s_army_to_target_list.Clear();
         foreach (s_army a in s_army_list)
-        {//ходит только одна армия -косяк
-            switch (a.status_army)
-            {
+        {
+            switch (a.get_status())
+            {//перебираем все армии
                 case 2://если армия готовится к атаке
                     search_target(a);//ищем ближайший вражеский город, армия запомнит атакуемый город
-                    if (training_army_compleed(a,a.target_city))//проверяем хватит ли сил для атаки
+                    if (training_army_compleed(a,a.get_target_city()))//проверяем хватит ли сил для атаки
                     {
                         s_army_to_target_list.Add(a);//добавляем в список
                     }
                     break;
                 case 3://если идет в атаку
+                    s_army_to_target_list.Add(a);//добавляем в список
+                    break;
+                case 4://если идет в свой город
                     s_army_to_target_list.Add(a);//добавляем в список
                     break;
                 default:
@@ -135,7 +138,7 @@ public class gamer : MonoBehaviour//
                 //если первый юнит состоял в большой армии, то создадим ему свою
                 tmp_army_garnison = unit_city_list[0].sc_army;
                 unit_city_list[0].status_untit = 1;//поменяем статус юнита
-                tmp_army_garnison.status_army = 1;//поменяем статус армии
+                tmp_army_garnison.set_status(1);//поменяем статус армии
                     //юниты записываем в армию первого юнита
                 for (int i = 1; i < bot_min_garnison; i++)
                 {
@@ -143,15 +146,15 @@ public class gamer : MonoBehaviour//
                     unit_city_list[i].status_untit = 1;//юниты помнят что они в гарнизоне
                 }
                 tmp_army_garnison.move_army(c.koordinat_garnizon);//перемещаем в точку гарнизона
-                tmp_army_garnison.status_army = 1;
-                if (tmp_army_garnison.unit_list.Count >= bot_min_garnison) flag_garnison_ready = true;
+                tmp_army_garnison.set_status(1);
+                if (tmp_army_garnison.get_unit_list().Count >= bot_min_garnison) flag_garnison_ready = true;
             }
         }
         return flag_garnison_ready;
     }
-    //накопление ударной армии в городе
+   
     public void accumulation_army(city c)
-    {
+    { //накопление ударной армии в городе
         List<unit> unit_city_list = new List<unit>();//список всех юнитов города
         s_army tmp_army_atack=new s_army();//армия атаки
         bool flag_unit_atack_is = false;//флаг наличия в городе армии атаки
@@ -175,17 +178,21 @@ public class gamer : MonoBehaviour//
             {
                 tmp_army_atack = unit_city_list[0].sc_army;
                 unit_city_list[0].status_untit = 2;//поменяем статус юнита
-                tmp_army_atack.status_army = 2; //поменяем статус армии
+                tmp_army_atack.set_status(2); //поменяем статус армии
             }
             //юниты записываем в армию первого юнита
             for (int i = 0; i < unit_city_list.Count; i++)
             {
-                if (unit_city_list[i].contains_to_list(tmp_army_atack.unit_list)) continue;//если юнит уже в армии то переходи к следующему
-                tmp_army_atack.add_unit(unit_city_list[i]);//записываем в армию атаки очередного юнита
-                unit_city_list[i].status_untit = 2;//поменяем статус юнита
+                if (unit_city_list[i].contains_to_list(tmp_army_atack.get_unit_list())) continue;//если юнит уже в армии то переходи к следующему
+                if (tmp_army_atack.add_unit(unit_city_list[i]))//записываем в армию атаки очередного юнита если есть место
+                    unit_city_list[i].status_untit = 2;//поменяем статус юнита
+                else
+                {//места в армии атаки нет
+                    break;//заканчиваем набор
+                }
             }
             tmp_army_atack.move_army(c.koordinat_atack);//перемещаем в точку армии атаки
-            tmp_army_atack.status_army = 2;
+            tmp_army_atack.set_status(2);
         }
     }
 
@@ -209,8 +216,7 @@ public class gamer : MonoBehaviour//
             {
                 min_point = next_min_pount;
                 cit_near = c;//находим ближайший
-                arm.target_city = c;//армия запомнит ближайший город для атаки
-                data.set_def_city(c);//сохраним
+                arm.set_target_city(c);//армия запомнит ближайший город для атаки
                 arm.set_target_koordinat(tmp_target_koordinat);//армия запомнит минимальные координаты
                 bot_put_cell_list = tmp_bot_put_cell_list;//бот запомни ближайший путь
                 tmp_bot_put_cell_list.Clear();
@@ -227,17 +233,35 @@ public class gamer : MonoBehaviour//
         List<unit> other_unit_list;//список юниов стоящих гарнизоном в другом городе
         other_unit_list = cit.get_garnison_unit_list();//получаем список юнито гарнизона
         foreach (unit u in other_unit_list) other_strenght_total += u.strength;
-        foreach (unit u in arm.unit_list) this_strenght_total += u.strength;
-        if (this_strenght_total > other_strenght_total) army_compleed = true;//условие начала похода на вражеский города
+        foreach (unit u in arm.get_unit_list()) this_strenght_total += u.strength;
+        if ((this_strenght_total > other_strenght_total)||(arm.get_unit_list().Count>7)) army_compleed = true;//условие начала похода на вражеский города
         return army_compleed;
     }
     //поход к цели
     public void atack_to_target(s_army arm)
     {
-        arm.status_army = 3;//армия в атаке
+        arm.set_status(3);//армия в атаке
         data.set_activ_army(arm);//передает в данные активной армии
         data.move_cam(arm.koordinat);
         data.game_s.bot_atack_target(arm.get_target_koordinat());
+    }
+    public int check_target(s_army arm)
+    {//проверка цели для атаки
+        int status = 0;
+        if (arm.get_target_city().vladelec.id == id)//если город уже наш, то отправим туда армию для накопления
+        {
+            arm.set_status(4);
+            status = 4;
+        }
+        else status = 3;
+        return status;
+    }
+    public void move_to_target(s_army arm)
+    {
+        arm.set_status(4);//армия в пути
+        data.set_activ_army(arm);//передает в данные активной армии
+        data.move_cam(arm.koordinat);
+        data.game_s.bot_move_target(arm.get_target_koordinat());
     }
     //просчет ходов до города
     public int calculate_put(s_army arm, city c)
@@ -291,7 +315,10 @@ public class gamer : MonoBehaviour//
                 else
                 {
                     data.set_flag_army_is_move(true);
-                    atack_to_target(s_army_to_target_list[num_tek_army_to_taget]);
+                    if (check_target(s_army_to_target_list[num_tek_army_to_taget]) == 4)//проверка цели, если город уже захвачен то поменяем статус армии
+                        move_to_target(s_army_to_target_list[num_tek_army_to_taget]);//и отправим ее в завоевоанный город
+                    else
+                        atack_to_target(s_army_to_target_list[num_tek_army_to_taget]);//иначе отправим этот город завоевывать
                     num_tek_army_to_taget++;//переставлем номер на следующую армию
                 }
             }

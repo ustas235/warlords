@@ -9,6 +9,7 @@ public class data_game : MonoBehaviour
     //setting game--------------------------
     public int start_money = 100;//стартовый капитал
     int count_player = 2;//количесвто игроков
+    public int start_unit = 1;//старотовые юниты всех игроков 0 легкая пехота, 1 тяжедая, 2 рыцыри
     //-----------------------
     private unit activ_unit;//активный юнит
     private bool is_army_move = false;//флаг что армия находится в движении
@@ -16,18 +17,25 @@ public class data_game : MonoBehaviour
     public city activ_city;//активный город
     public game game_s;//класс со скриптом игры
     public s_army def_army;//защищиающаяся армия
-    city def_city;//защищиающийся город
     public int type_event = 1;//текущее событие 1-перемещение, 2 атака, 3 атака города
-    public gamer tek_activ_igrok;
+    gamer tek_activ_igrok;
     public item_cell can_move_cell;//ячейка, до которой юниту хватит очков хода
     public List<item_cell> can_move_cell_list = new List<item_cell>();//список ячеек куда может пойти юнит
     public List<GameObject> spisok_puti;//список объектов пути
     public Camera Cam;//камера
     public GameObject city_window;//окно города
-    public GameObject attack_window;//окно города
+    public GameObject attack_window;//окно атаки общее
+    public GameObject attack_window_8;//окно атаки на 8 юниов
+    public GameObject attack_window_16;//окно атаки
+    public GameObject attack_window_24;//окно атаки
+    public GameObject attack_window_32;//окно атаки
     public s_panel_unit units_panel_s;//скрипт панели с юнитами
     public s_panel_city city_panel_s;//скрипт панели с городом
     public s_panel_attack atack_panel_s;//скрипт напнели сатакой
+    public s_panel_attack atack_panel_s_8;//скрипт напнели сатакой на 8 юнитов
+    public s_panel_attack atack_panel_s_16;//скрипт напнели сатакой на 16 юнитов
+    public s_panel_attack atack_panel_s_24;//скрипт напнели сатакой на 24 юнитов
+    public s_panel_attack atack_panel_s_32;//скрипт напнели сатакой на 32 юнитов
     public Vector2Int st_p, fin_p;//индексы координат х и у в массиве координат grid_x и grid_y
     public float[] grid_x=new float[18];
     public float[] grid_y = new float[18];
@@ -36,6 +44,7 @@ public class data_game : MonoBehaviour
     public int max_kletka_y = 17;
     public int min_kletka_y = 0;
     public int id_unit_count = 0;//счетчик индефикаторов юниов
+    public int id_army_count = 0;//счетчик индефикаторов армий
     public item_cell[,] kletki;//двумерный массив с объектами клеток
     void Start()
     {
@@ -44,8 +53,15 @@ public class data_game : MonoBehaviour
         //надем скрипт с панелью юнитов
         units_panel_s = GameObject.Find("Panel_unit").GetComponent(typeof(s_panel_unit)) as s_panel_unit;//найдем скрипт панели юнитов
         city_panel_s = GameObject.Find("Panel_city").GetComponent(typeof(s_panel_city)) as s_panel_city;//найдем главный скрипт панели города
-        atack_panel_s= GameObject.Find("Panel_attack").GetComponent(typeof(s_panel_attack)) as s_panel_attack;//найдем скрипт панели с атакой
-        attack_window.SetActive(false);
+        atack_panel_s_8= GameObject.Find("Panel_attack_8").GetComponent(typeof(s_panel_attack)) as s_panel_attack;//найдем скрипт панели с атакой
+        atack_panel_s_16 = GameObject.Find("Panel_attack_16").GetComponent(typeof(s_panel_attack)) as s_panel_attack;//найдем скрипт панели с атакой 16
+        atack_panel_s_24 = GameObject.Find("Panel_attack_24").GetComponent(typeof(s_panel_attack)) as s_panel_attack;//найдем скрипт панели с атакой 24
+        atack_panel_s_32 = GameObject.Find("Panel_attack_32").GetComponent(typeof(s_panel_attack)) as s_panel_attack;//найдем скрипт панели с атакой 32
+       
+        attack_window_8.SetActive(false);
+        attack_window_16.SetActive(false);
+        attack_window_24.SetActive(false);
+        attack_window_32.SetActive(false);
         city_window.SetActive(false);//скроем панели;
         
         //двумерный массив с объектами клеток
@@ -88,6 +104,7 @@ public class data_game : MonoBehaviour
     public void set_activ_army(s_army a)//установка активного игрока
     {
         activ_army = a;
+        
         if (a != null)
         {
             setting_panel_unit();//настроим панель с юнитами
@@ -96,7 +113,7 @@ public class data_game : MonoBehaviour
     }
     public unit get_activ_unit()//получение активного юнита
     {
-
+        
         return activ_unit;
     }
     public s_army get_activ_army()//получение активного юнита
@@ -173,7 +190,7 @@ public class data_game : MonoBehaviour
     {
         List<unit> point_unit_list = new List<unit>();//список юнитов в точке сактивным юнитом
         //сразу занесем в список юниты активной армии
-        foreach (unit tmp_unit in activ_army.unit_list) point_unit_list.Add(tmp_unit);
+        foreach (unit tmp_unit in activ_army.get_unit_list()) point_unit_list.Add(tmp_unit);
         //перебираем все армии игрока
         
         foreach (s_army tmp_army in tek_activ_igrok.s_army_list)
@@ -184,7 +201,7 @@ public class data_game : MonoBehaviour
                         (activ_army.koordinat.y == tmp_army.koordinat.y))
                 //если армия в тех же координатах что и активная
                 {
-                    foreach (unit tmp_unit in tmp_army.unit_list)//перебираем все второй армии
+                    foreach (unit tmp_unit in tmp_army.get_unit_list())//перебираем все второй армии
                     {
                         //если таких юнитов там еще не было занесем в спиок
                         point_unit_list.Add(tmp_unit);
@@ -203,14 +220,8 @@ public class data_game : MonoBehaviour
     {
         return count_player;
     }
-    public void set_def_city(city c)
-    {
-        def_city = c;
-    }
-    public city get_def_city()
-    {
-        return def_city;
-    }
+
+
     public bool get_flag_army_is_move()
     {//получить флаг состоятния движения армий
         return is_army_move;
@@ -218,5 +229,13 @@ public class data_game : MonoBehaviour
     public void set_flag_army_is_move(bool f)
     {//установить флаг состоятния движения армий
         is_army_move=f;
+    }
+    public gamer get_activ_igrok()
+    {
+        return tek_activ_igrok;
+    }
+    public void set_activ_igrok(gamer g)
+    {
+        tek_activ_igrok = g;
     }
 }

@@ -49,17 +49,18 @@ public class city : MonoBehaviour
         //this.GetComponent<SpriteRenderer>().sprite = spr_city_bel[0];
         if ((!EventSystem.current.IsPointerOverGameObject())) 
         {
-            if (data.tek_activ_igrok.id == vladelec.id)//городу кликает владелец
+            if (data.get_activ_igrok().id == vladelec.id)//городу кликает владелец
             {
                 if (data.get_activ_army() == null)//нет активынх юнитов откроем панель города
                 {
                     data.activ_city = this;//сохраним себя в активном городе
-                    data.city_panel_s.set_panel(data.tek_activ_igrok.id);
+                    data.city_panel_s.set_panel(data.get_activ_igrok().id);
                     data.city_window.SetActive(true);//если активный игрок владелец города показать панель
                 }
                 else
                 {
                     data.type_event = 1;//событие перемещения
+                    data.get_activ_army().set_target_city(this);//запомним город - назанчение
                     obj_mouse.mouse_event(1);//переместим туда юнит
                 }
 
@@ -67,8 +68,9 @@ public class city : MonoBehaviour
             else //город принадлежит другому игроку, попытка атаки города
             {
                 obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
-                data.set_def_city(this);//сохраним себя в защищаемом город
+                data.get_activ_army().set_target_city(this);//сохраним себя в защищаемом город
                 data.type_event = 3; //сохраним тип события бля дальнейшей обработки
+                data.get_activ_army().set_status(3);//сатаус армии атака на город
             }
         }
     }
@@ -95,13 +97,11 @@ public class city : MonoBehaviour
                 //создадим юнита
                 
                 Vector3 koor_unit = new Vector3(koordinat.x - 0.2f, koordinat.y + 0.2f, koordinat.z);//координаты создания юнита
-                unit tmp_unit_s = new unit();
+                unit tmp_unit_s = new unit(data.id_unit_count++);
                 tmp_unit_s.set_koordinat(koor_unit);
                 tmp_unit_s.set_unit(id_unit, vladelec, game_s.get_sprite_unit(vladelec.id, id_unit), game_s.get_sprite_unit_off());
-                GameObject flag_tmp_obj = (GameObject)Instantiate(game_s.flag_prefab, koor_unit, Quaternion.identity);//создаем объект флага
-                tmp_unit_s.flag = flag_tmp_obj;//армия запоминает свой флаг
-                tmp_unit_s.flags_sprites = game_s.get_sprite_flag(tmp_unit_s.vladelec.id);
                 game_s.create_new_army(tmp_unit_s);
+                
             }
         }
     }
@@ -158,7 +158,7 @@ public class city : MonoBehaviour
         {
             if (is_garnison(a))
             {
-                foreach (unit u in a.unit_list) garnison.Add(u);
+                foreach (unit u in a.get_unit_list()) garnison.Add(u);
             }
         }
         return garnison;

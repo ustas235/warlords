@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 public class unit : MonoBehaviour 
@@ -11,10 +12,11 @@ public class unit : MonoBehaviour
     public data_game data;//класс где буду хранится все данные игры
     
     mouse obj_mouse;//объект с скриптами мыши
+    public GameObject obj_unit;//ссылка на объект юнита
     public GameObject flag;//ссыка на прикрепленный флаг
-    public Sprite[] flags_sprites = new Sprite[8];//массив со спратами флагов
-    public int max_hod=1;//количество ходов максимальное
-    public int tek_hod = 1;//количество ходов текущее
+    
+    int max_hod=1;//количество ходов максимальное
+    int tek_hod = 1;//количество ходов текущее
     public int tek_hod_tmp = 1;//количество ходов временное, после перемещения данное значение переместится в тек ход
     public gamer vladelec;//владелец юнита
     public int strength = 2;//сила
@@ -29,13 +31,14 @@ public class unit : MonoBehaviour
     public int status_untit = 0;//статус юнита 0 свободен, 1 - в нарнизоне, 2 -  в армии атаки
     private void Awake()
     {
-        
+        GameObject obj_player = GameObject.Find("land");
+        //к объекту привязан свой скрипт ищем его
+        data = obj_player.GetComponent(typeof(data_game)) as data_game;
+        obj_mouse = obj_player.GetComponent(typeof(mouse)) as mouse;
     }
     void Start()
     {
-        
-        
-
+       
 
     }
 
@@ -107,13 +110,10 @@ public class unit : MonoBehaviour
     {//метод рсчета боя
         
     }
-    public unit ()
+    public unit (int id)
     {
-        GameObject obj_player = GameObject.Find("land");
-        //к объекту привязан свой скрипт ищем его
-        data = obj_player.GetComponent(typeof(data_game)) as data_game;
-        obj_mouse = obj_player.GetComponent(typeof(mouse)) as mouse;
-        id_unit = data.id_unit_count++;
+        
+        id_unit = id;
         //Debug.Log(id_unit.ToString());
     }
     public bool contains_to_list(List<unit> l)//метод проверки, что юнит сордержится в списке
@@ -129,14 +129,30 @@ public class unit : MonoBehaviour
     public void remove_unit(List<unit> u_list)
     {//удаление юнита из списка
         int num = -1;
-        for (int i = 0; i < u_list.Count; i++) if (id_unit == u_list[i].id_unit) 
+        for (int i = 0; i < u_list.Count; i++) 
+            if (id_unit == u_list[i].id_unit) 
                 num = i;
         if (num >=0) 
             u_list.RemoveAt(num);
     }
     public void destroy_unit()
     {//методу удаления мертвых юнитов
-        Destroy(flag);
         Destroy(this);
+    }
+    public int get_tek_hod()
+    {
+        return tek_hod;
+    }
+    public void set_tek_hod(int h)
+    {
+        tek_hod = h;
+    }
+    public int get_max_hod()
+    {
+        return max_hod;
+    }
+    public void set_max_hod(int h)
+    {
+        max_hod = h;
     }
 }

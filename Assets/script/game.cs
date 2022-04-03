@@ -12,6 +12,7 @@ public class game : MonoBehaviour
     public GameObject city_prefab;//префаб города
     public GameObject unit_prefab;//префаб юнита
     public GameObject flag_prefab;//префаб флага
+    public GameObject army_prefab;//префаб армии
     public GameObject butt_end;//тест кнопка конца хода
     mouse obj_mouse;//объект с скриптами мыши
     public int num_tek_igrok = 1;
@@ -64,19 +65,19 @@ public class game : MonoBehaviour
         //создаем игроков
         create_gamers();
         gamer_list[1].active = true;//ход первому игроку
-        data.tek_activ_igrok = gamer_list[1];//запмоним активного игрока
+        data.set_activ_igrok(gamer_list[1]);//запмоним активного игрока
 
         initial_place();//создаем и расставляем города
         //переместим камеру в город первого игрока
-        data.set_activ_army(data.tek_activ_igrok.s_army_list[0]);//активный юнит 
-        data.move_cam(data.tek_activ_igrok.city_list[0].koordinat);
+        data.set_activ_army(data.get_activ_igrok().s_army_list[0]);//активный юнит 
+        data.move_cam(data.get_activ_igrok().city_list[0].koordinat);
 
     }
 
     // Update is called once per frame
     void Update()
     {
-        data.tek_activ_igrok.get_move_to_target();//повторяем вызов перемещения у активного игрока
+        data.get_activ_igrok().get_move_to_target();//повторяем вызов перемещения у активного игрока
     }
     public void end_turn()//обработка кнопки конца хода
     {
@@ -84,7 +85,7 @@ public class game : MonoBehaviour
         {
             foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
 
-            int next = data.tek_activ_igrok.id;
+            int next = data.get_activ_igrok().id;
             int count = 0;//ограничитель количества кругов
             while (count < 20)//ищем очередного игрока
             {
@@ -106,20 +107,20 @@ public class game : MonoBehaviour
             }
             print("Ходит игрок  " + num_tek_igrok);
             butt_end.GetComponentInChildren<Text>().text = num_tek_igrok.ToString();//тест покажем номер активного игрока
-            data.tek_activ_igrok = gamer_list[num_tek_igrok];//сохраним в дате текущего игрока
+            data.set_activ_igrok(gamer_list[num_tek_igrok]);//сохраним в дате текущего игрока
                                                              //переведем камеру на юныты игрока
-            if (data.tek_activ_igrok.obj_army_list.Count > 0)
+            if (data.get_activ_igrok().obj_army_list.Count > 0)
             {
                 //Vector3 tmp_vect=data.tek_activ_igrok.unit_list[0]
-                data.move_cam(data.tek_activ_igrok.s_army_list[0].koordinat);
-                data.set_activ_army(data.tek_activ_igrok.s_army_list[0]);
+                data.move_cam(data.get_activ_igrok().s_army_list[0].koordinat);
+                data.set_activ_army(data.get_activ_igrok().s_army_list[0]);
                 index_unit = 0;
             }//либо на первый город
             else
             {
-                if (data.tek_activ_igrok.city_list.Count > 0) data.move_cam(data.tek_activ_igrok.city_list[0].koordinat);
+                if (data.get_activ_igrok().city_list.Count > 0) data.move_cam(data.get_activ_igrok().city_list[0].koordinat);
             }
-            if (data.tek_activ_igrok.bot_flag) data.tek_activ_igrok.action_bot();//если бут то пусть он сам играет
+            if (data.get_activ_igrok().bot_flag) data.get_activ_igrok().action_bot();//если бут то пусть он сам играет
         }
     }
     //тест!!!
@@ -134,12 +135,12 @@ public class game : MonoBehaviour
     {
         
         // поиск следующего юнита для активации 
-        if (data.tek_activ_igrok.obj_army_list.Count > 0)
+        if (data.get_activ_igrok().obj_army_list.Count > 0)
         {
             index_unit++;
-            if (index_unit >= data.tek_activ_igrok.obj_army_list.Count) index_unit = 0;
-            data.move_cam(data.tek_activ_igrok.s_army_list[index_unit].koordinat);
-            data.set_activ_army(data.tek_activ_igrok.s_army_list[index_unit]);
+            if (index_unit >= data.get_activ_igrok().obj_army_list.Count) index_unit = 0;
+            data.move_cam(data.get_activ_igrok().s_army_list[index_unit].koordinat);
+            data.set_activ_army(data.get_activ_igrok().s_army_list[index_unit]);
             foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
             obj_mouse.kursor.gameObject.SetActive(false);// курсор невидим
         }//либо на первый город
@@ -150,7 +151,7 @@ public class game : MonoBehaviour
         {
             gamer tmp_gamer;
             //боты играют за игроков начиная со второго
-            if (i > 1) tmp_gamer = new gamer(i, true);
+            if (i > 2) tmp_gamer = new gamer(i, true);
             else tmp_gamer = new gamer(i, false);
             gamer_list.Add(tmp_gamer);
             gamer_list[i].spr_city = spr_list_city[i][0];//игрок запоминает спратй своего города
@@ -198,13 +199,16 @@ public class game : MonoBehaviour
             foreach (city c in gamer_list[i].city_list)
             {
                 Vector3 koor_unit = new Vector3(c.koordinat.x - 0.2f, c.koordinat.y + 0.2f, c.koordinat.z);
-                unit tmp_unit_s = new unit();
+                GameObject unit_tmp_obj = (GameObject)Instantiate(unit_prefab, koor_unit, Quaternion.identity);//создаем объект юнита
+                unit tmp_unit_s = unit_tmp_obj.GetComponent(typeof(unit)) as unit;
+                tmp_unit_s.obj_unit = unit_tmp_obj;//юнит запомнит свой объект
+                tmp_unit_s.obj_unit.SetActive(false);//все юниты не видимы, видим только армии
+                tmp_unit_s.id_unit = data.id_unit_count++;
                 tmp_unit_s.set_koordinat(koor_unit);
-                tmp_unit_s.set_unit(2, gamer_list[i], get_sprite_unit(i, 2), spr_unit_off);//настраиваем юнит
-                GameObject flag_tmp_obj = (GameObject)Instantiate(flag_prefab, koor_unit, Quaternion.identity);//создаем объект флага
-                tmp_unit_s.flag = flag_tmp_obj;//армия запоминает свой флаг
-                tmp_unit_s.flags_sprites = get_sprite_flag(tmp_unit_s.vladelec.id);
+                tmp_unit_s.set_unit(data.start_unit, gamer_list[i], get_sprite_unit(i, data.start_unit), spr_unit_off);//настраиваем юнит
+                
                 create_new_army(tmp_unit_s);//создаем армию на основе юнита
+
             }
         }
     }
@@ -217,22 +221,26 @@ public class game : MonoBehaviour
 
     public void create_new_army(unit u)//создание новой армии из юнита
     {
+        
         Vector3 koor_unit = u.koordinat;//координаты создания армии равны координатам юнита
-        GameObject army_tmp_obj = (GameObject)Instantiate(unit_prefab, koor_unit, Quaternion.identity);//создаем объект армии
-        s_army tmp_army_s = army_tmp_obj.GetComponent(typeof(s_army)) as s_army;//на скрипт
+        GameObject army_tmp_obj = (GameObject)Instantiate(army_prefab, koor_unit, Quaternion.identity);//создаем объект армии
+        s_army tmp_army_s = army_tmp_obj.GetComponent(typeof(s_army)) as s_army; ;//находим скрипт армию
+        tmp_army_s.id = data.id_army_count++; //запомним id армии
         tmp_army_s.set_koordinat(koor_unit);//армия запомнит свой координат
         tmp_army_s.set_obj(army_tmp_obj);//армия запомнит объект
         tmp_army_s.vladelec = u.vladelec;
-        
-        
+        GameObject flag_tmp_obj = (GameObject)Instantiate(flag_prefab, koor_unit, Quaternion.identity);//создаем объект флага
+        tmp_army_s.army_flag = flag_tmp_obj;//юнит запоминает свой флаг
+        tmp_army_s.flags_sprites = get_sprite_flag(tmp_army_s.vladelec.id);
+
         //передаем юнита игроку
-        army_tmp_obj.GetComponent<SpriteRenderer>().sprite = u.spr_unit;//выставляем спрайт
-        tmp_army_s.unit_list.Add(u);//добавим в армию новый юнит
-        tmp_army_s.set_army();
-        u.sc_army = tmp_army_s;//унит запоминает свою армию
+        //unit_tmp_obj.GetComponent<SpriteRenderer>().sprite = u.spr_unit;//выставляем спрайт
+        tmp_army_s.add_unit(u);//добавим в армию новый юнит
         gamer_list[u.vladelec.id].obj_army_list.Add(army_tmp_obj);//список объектов
         gamer_list[u.vladelec.id].s_army_list.Add(tmp_army_s);//скриптов к объектам
+        tmp_army_s.set_army();
         
+
     }
     public Sprite get_sprite_unit(int num_igrok, int num_type)//получение спрайта юнита по номеру игрока и номеру юнита
     {
@@ -271,28 +279,28 @@ public class game : MonoBehaviour
     public void finih_atack(List<unit> unit_list_atack, List<bool> f_a, List<unit> unit_list_def, List<bool> f_d)
     {//метод обрабатывае результаты боя за город
         //удалим убитые юниты
-        for (int i=0;i< unit_list_atack.Count;i++)
+        for (int i= unit_list_atack.Count-1; i>-1 ;i--)
         {
             if (!f_a[i])
             {
                 unit_list_atack[i].sc_army.sub_unit_destroy(unit_list_atack[i]);//если юнит убит удалим юнит
                 f_a.RemoveAt(i);
-                i--;
             }
         }
-        for (int i = 0; i < unit_list_def.Count; i++)
+        for (int i = unit_list_def.Count-1; i > -1; i--)
         {
             if (!f_d[i])
             {
                 unit_list_def[i].sc_army.sub_unit_destroy(unit_list_def[i]);//если юнит убит удалим юнит
                 unit_list_def.Remove(unit_list_def[i]);//т.к. список защитников был сощдан отдель чистим и его
                 f_d.RemoveAt(i);
-                i--;
+
             }
         }
         //если все защитники пали и была защита города, то город передается новому владельцу
-        if ((unit_list_def.Count<1) & (data.get_def_city() != null)) data.get_def_city().change_vladelec(unit_list_atack[0].vladelec);
-        data.set_def_city(null);//сбросим ссылку на защ город
+        if ((unit_list_def.Count<1) & (data.get_activ_army().get_target_city() != null))
+            data.get_activ_army().get_target_city().change_vladelec(unit_list_atack[0].vladelec);
+        //data.set_def_city(null);//сбросим ссылку на защ город
         //unit_list_atack.Clear();
         //unit_list_def.Clear();
         data.setting_panel_unit();//настроим панель с юнитами
@@ -312,7 +320,7 @@ public class game : MonoBehaviour
         foreach (GameObject city_obj in city_obj_list)
         {
             city tmp_city = city_obj.GetComponent(typeof(city)) as city;
-            if (tmp_city.vladelec.id!=data.tek_activ_igrok.id)
+            if (tmp_city.vladelec.id!= data.get_activ_igrok().id)
                 tmp_city_list.Add(tmp_city);
         }
         return tmp_city_list;
@@ -395,6 +403,12 @@ public class game : MonoBehaviour
         bot_klick_kursor();
         
     }
+    public void bot_move_target(Vector3 target)
+    { //1-перемещение, 2-атака, 3-атака города
+        bot_klick_mouse(1, target);//имитируем клик мышки с типом перемещения в город
+        bot_klick_kursor();
+
+    }
     public void bot_klick_mouse(int type_event, Vector3 koor_clk)
     {//имитация клика мышки ботом, чтобы поставить курсор
         data.type_event = type_event;//тип события бля дальнейшей обработки
@@ -408,5 +422,47 @@ public class game : MonoBehaviour
         move mv= kr.GetComponent(typeof(move)) as move;
         mv.start_move();//начло движения
     }
-   
+    public void set_sprite_army_flag(gamer igrok,Vector3 k)
+    {//метод который после каждого передвижения выставляет спрайты армий и флаги по заданным координатам
+        List<s_army> army_koor_lists = new List<s_army>();//список армий по соотв координатам
+        s_army army_max_strengh = data.get_activ_army(); ;//армия с самым сильным юнитом
+        int strenght = 0;
+        int count_unit = 0;//количество юнитов в клетке;
+        army_koor_lists.Clear();
+        foreach (s_army a in igrok.s_army_list)
+        {//собираем все армии в один список
+            if (a.check_koordinat(k))
+            {
+                army_koor_lists.Add(a);
+                count_unit = count_unit + a.get_unit_list().Count;//считаем количество юнитов в клетке
+            }
+        }
+        if (army_koor_lists.Count() > 0)
+        {
+            foreach (s_army a in army_koor_lists)
+            {
+                a.army_flag.SetActive(false);//выключаем все флаги в армии
+                a.get_obj().SetActive(false);//выключаем спрайты всех армии
+            }
+            foreach (s_army a in army_koor_lists)
+            {
+                if (a.get_max_unit_str() >= strenght)
+                {
+                    strenght = a.get_max_unit_str();
+                    army_max_strengh = a;
+                }
+            }
+            if (data.get_activ_army() != null)
+            {//если есть активная аврмия
+                if (data.get_activ_army().check_koordinat(k))//и она на нашей клетке то покажем ее
+                {//если в клетке есть активная армия, то спрайт на клетке будет равен спрайту армии
+                    army_max_strengh = data.get_activ_army();
+                }
+            }
+            army_max_strengh.get_obj().SetActive(true);//спрайт включается у армии самым сильны юнитом/активной армии
+            army_max_strengh.army_flag.GetComponent<SpriteRenderer>().sprite = army_max_strengh.flags_sprites[count_unit - 1];//размер флага зависит от величины армии
+            army_max_strengh.army_flag.SetActive(true);
+        }
+
+    }
 }
