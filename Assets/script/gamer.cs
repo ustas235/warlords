@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -15,14 +16,14 @@ public class gamer : MonoBehaviour//
     //состояние игрока
     float gold = 0;//количество денег
     float delta_gold = 0;//стоимость содержанияармии
-
+    float old_gold;
     public int id = 0;//id игрока, он же номер
     public bool still_play = true;//флаг что игрок еще играет
     public bool active = false;//флаг что ход игрока
     public Sprite spr_city;//ссылка на спрат своего города
     //настройки бота
     public bool bot_flag = false;//флаг что играетбот
-    public int bot_army_create_city = 1;//тип войск строимых ботом
+    public int bot_army_create_city = 0;//тип войск строимых ботом
     public int bot_min_garnison = 0;//гарнизон в городе
     public List<item_cell> bot_put_cell_list;//список ячеек пути
     List<item_cell> tmp_bot_put_cell_list;//временный список список ячеек пути (станет постоянным для ближайшего города)
@@ -30,8 +31,10 @@ public class gamer : MonoBehaviour//
     // Start is called before the first frame update
     void Start()
     {
-        
-        
+        GameObject obj_player = GameObject.Find("land");
+        //к объекту привязан свой скрипт ищем его
+        data = obj_player.GetComponent(typeof(data_game)) as data_game;
+        old_gold = data.get_start_gold();
     }
 
     // Update is called once per frame
@@ -39,15 +42,17 @@ public class gamer : MonoBehaviour//
     {
         
     }
-    public gamer(int num, bool flag_bot)//конструктор принимает номер и тип игроа бот/не бот
-    {
+    public void start_setup(int num, bool flag_bot)
+    {//стартовая настройка
         id = num;
         bot_flag = flag_bot;
+        
         GameObject obj_player = GameObject.Find("land");
         //к объекту привязан свой скрипт ищем его
         data = obj_player.GetComponent(typeof(data_game)) as data_game;
-        gold = data.start_gold;
+        gold = data.get_start_gold();
     }
+    
     //------------------------------------
     //действия бота
     public void set_bot(int level_bot)
@@ -72,8 +77,16 @@ public class gamer : MonoBehaviour//
     {//дествие бота
         foreach (city c in city_list)
         {//строим войска и формируем гарнизоны
-            if (c.count_hod_start<0)
-                c.setting_activ_city(bot_army_create_city);//строим юниты bot_army_create_city го уровня
+            if (check_upgrate_city(c))//проверка на то что можем улучшить пр-во в городе
+            {//если можем улучшить производства
+                upgrate_build_city(c);//улучшаем производство в городе
+                create_new_unit(c);//выбирам и строим в этом городе юнит
+            }
+            if (c.can_any_build())//если город сожет строить строить хоть хоть что-то
+                create_new_unit(c);//выбирам и строим в этом городе юнит
+            
+            //if (c.count_hod_start<0)
+                //c.setting_activ_city(bot_army_create_city);//строим юниты bot_army_create_city го уровня
             if (accumulation_garnison(c))//строим гарнизон
                 accumulation_army(c);//если гарнизон готов, строим армию атаки
 
@@ -109,6 +122,63 @@ public class gamer : MonoBehaviour//
             start_move_to_target = true;//старт движения армий из списка
         }
     }
+
+    public void create_new_unit(city c)
+    {//строительство юнитов
+     //проверяем от наилучшего к худшему и строим
+        int tmp_id=-1;
+        for (int i=data.count_type_unit-1;i>=0;i--)
+        {//ищем наилучший юнит для строительства
+            if (c.can_build_flag[i])
+            {//ищем установленый флаг
+                tmp_id = i;//запомним номер юнита для строительства
+                break;
+            }
+        }
+        if (tmp_id > c.id_unit)//если нашли лучший вариант 
+        {
+            c.setting_activ_city(tmp_id);//меняем производство
+        }
+    }
+
+    public void upgrate_build_city(city c)
+    {// улучшение производства
+     //проверяем от наилучшего к худшему и улучшаем то что можем
+     //если самы сиьный юнит куплен, то строим его
+        for (int i = data.count_type_unit - 1; i >= 0; i--)
+        {
+            if (!c.can_build_flag[i])
+            {//ищем неустановленый флаг
+                if (gold >= data.get_cost_build()[i]) //проверяем на то что золота хватит прокачать стройку
+                {
+                    if (change_gold(0 - data.get_cost_build()[i]))//поппытка купить производство
+                    {//если денег хвататет
+                        c.can_build_flag[i] = true;//теперь этот юнит можно строить
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public bool check_upgrate_city(city c)
+    {//если куплен боллее крутой юнитто сбраываем флаг
+        bool flag = false;
+        for (int i=0;i<data.count_type_unit;i++)
+        {//перебираем все типы юнитов
+            if (!c.can_build_flag[i])
+            {//ищем неустановленый флаг
+                if (gold >= data.get_cost_build()[i])
+                {
+                    flag = true;//проверяем на то что золота хватит прокачать стройку
+                    
+                }
+            }
+            else flag = false;//если дальше юниты куплены, то скинем флаг
+        }
+        return flag;
+    }
+
     //накопление гарнизонов городах
     public bool accumulation_garnison(city c)
     {
@@ -328,7 +398,7 @@ public class gamer : MonoBehaviour//
         }
     }
     public bool change_gold(float ch_g)
-    {//метод изменения денег
+    {//метод изменения денег 
         float tmp = gold;
         bool flag = false;
         tmp = gold + ch_g;
@@ -336,7 +406,7 @@ public class gamer : MonoBehaviour//
         {//проверка на то что у игрока хватит денег
             gold = tmp;
             flag = true;
-            delta_gold = calculate_delta_gold();
+            delta_gold = calculate_cost_army_gold();
             if (data.get_activ_igrok().id == id) data.main_panel.set_main_panel(gold, delta_gold);//если игрок активный то отобразим изменения на панелли
         }
         else flag = false;
@@ -344,7 +414,7 @@ public class gamer : MonoBehaviour//
     }
     public void set_delta_gold()
     {//метод обновления баланса казны
-        delta_gold = calculate_delta_gold(); ;
+        delta_gold = calculate_cost_army_gold(); ;
         if (data.get_activ_igrok().id == id) data.main_panel.set_main_panel(gold, delta_gold);//если игрок активный то отобразим изменения на панелли
     }
     public void collect_cost()
@@ -354,7 +424,7 @@ public class gamer : MonoBehaviour//
             delete_extra_unit();//если стоимость содержания больше чем есть денег удалим лишние юниты
         cost = get_cost_army();//еще раз считаем стоимость содержания
         gold = gold - cost;
-        delta_gold = calculate_delta_gold();
+        delta_gold = calculate_cost_army_gold();
         if (data.get_activ_igrok().id == id) data.main_panel.set_main_panel(gold, delta_gold);//если игрок активный то отобразим изменения на панелли
     }
     public float get_cost_army()
@@ -394,12 +464,13 @@ public class gamer : MonoBehaviour//
             }
         }
     }
-    public float calculate_delta_gold()
-    {//подсчет баланса=все доходы-расходы
+    public float calculate_cost_army_gold()
+    {//подсчет баланса=все доходы-расходы на армию
         int dohod=0;
         float cost = get_cost_army();
         foreach (city c in city_list) dohod = dohod + c.get_profit();
         delta_gold = dohod - cost;
         return delta_gold;
     }
+    
 }

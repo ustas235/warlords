@@ -41,26 +41,30 @@ public class mouse : MonoBehaviour
     //клик для указания конца пути
     void OnMouseDown()
     {
-        if ((!EventSystem.current.IsPointerOverGameObject())&(data.get_activ_army()!=null))
+        if (!data.get_flag_army_is_move())
         {
-            mouse_event(1);
-            data.type_event = 1;//1-перемещение сохраним тип события бля дальнейшей обработки
-        }
-        if ((!EventSystem.current.IsPointerOverGameObject()) & (data.get_activ_army() == null))
-        {//если клик по карте но нет активной армии, то переместим туда камеру
-            MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            MousePos.z = -10f;
-            data.move_cam(MousePos);//перемещаем камеру
+            
+            if ((!EventSystem.current.IsPointerOverGameObject()) & (data.get_activ_army() != null))
+            {
+                mouse_event(1);
+                data.type_event = 1;//1-перемещение сохраним тип события бля дальнейшей обработки
+            }
+            if ((!EventSystem.current.IsPointerOverGameObject()) & (data.get_activ_army() == null))
+            {//если клик по карте но нет активной армии, то переместим туда камеру
+                MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                MousePos.z = -10f;
+                data.move_cam(MousePos);//перемещаем камеру
+            }
         }
     }
     //создание объектов  показывающих путь
-    public void mouse_event(int type_evrnt)
+    public void mouse_event(int type_event)
     {
         //метод отработки клика мышки
         //1-перемещение, 2-атака, 3-атака города
-        if (type_evrnt == 1) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_move;
-        if (type_evrnt == 2) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
-        if (type_evrnt == 3) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
+        if (type_event == 1) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_move;
+        if (type_event == 2) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
+        if (type_event == 3) kursor.gameObject.GetComponent<SpriteRenderer>().sprite = spr_attack;
         data.can_move_cell_list.Clear();
         //for (int i=0;i< spisok_puti.Count;i++)
         foreach (GameObject p in spisok_puti) Destroy(p);
@@ -141,7 +145,7 @@ public class mouse : MonoBehaviour
     {//получение ссылки на курсор
         return kursor;
     }
-
+    
 
 }
 

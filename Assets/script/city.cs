@@ -23,27 +23,27 @@ public class city : MonoBehaviour
     public Vector3 koordinat_garnizon;//координаты для стоянки армии гарнизона
     public Vector3 koordinat_atack;//координаты для стоянки армии атаки
     public Vector3 min_kkor;//координаты ближайшей точки, нужны для расчета у ботов
-    public int id_unit=1;//номер производимого юнита 0- легкая пехота, 1- тяжелая, 2- рыцарь
+    public int id_unit = -1;//номер производимого юнита 0- легкая пехота, 1- тяжелая, 2- рыцарь
     public int count_hod = 1, count_hod_start = -1;//количество ходов до завершения строительства
     public List<unit> garnison = new List<unit>();//юниты охраняющие город
+    public bool[] can_build_flag;//список возможного стрительства в виде флагов
+    public int bot_num_unit_build=-1;//номер юнита который боту будет стрить в этом городе
+
     private void Awake()
     {
-        GameObject obj_player = GameObject.Find("land");
-        //к объекту привязан свой скрипт ищем его
-        data = obj_player.GetComponent(typeof(data_game)) as data_game;
-        game_s = obj_player.GetComponent(typeof(game)) as game;
-        obj_mouse = obj_player.GetComponent(typeof(mouse)) as mouse;
-        count_hod_start = -1;//при старте он -1 чтобы юниты не создавались
+        
+        
+
     }
     void Start()
     {
-       
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
     private void OnMouseEnter()
     {
@@ -53,41 +53,48 @@ public class city : MonoBehaviour
     private void OnMouseDown()
     {
         //this.GetComponent<SpriteRenderer>().sprite = spr_city_bel[0];
-        if ((!EventSystem.current.IsPointerOverGameObject())) 
-        {
-            if (data.get_activ_igrok().id == vladelec.id)//городу кликает владелец
+        if (!data.get_flag_army_is_move())
+        {//пока двигаются армии не реагируем на клик мышки
+            if ((!EventSystem.current.IsPointerOverGameObject()))
             {
-                if (data.get_activ_army() == null)//нет активынх юнитов откроем панель города
+                if (data.get_activ_igrok().id == vladelec.id)//городу кликает владелец
                 {
-                    data.activ_city = this;//сохраним себя в активном городе
-                    data.city_panel_s.set_panel(data.get_activ_igrok().id);
-                    data.city_window.SetActive(true);//если активный игрок владелец города показать панель
-                }
-                else
-                {
-                    data.type_event = 1;//событие перемещения
-                    data.get_activ_army().set_target_city(this);//запомним город - назанчение
-                    obj_mouse.mouse_event(1);//переместим туда юнит
-                }
+                    if (data.get_activ_army() == null)//нет активынх юнитов откроем панель города
+                    {
+                        data.activ_city = this;//сохраним себя в активном городе
+                        data.city_panel_s.set_panel(data.get_activ_igrok().id);
+                        data.city_window.SetActive(true);//если активный игрок владелец города показать панель
+                    }
+                    else
+                    {
+                        data.type_event = 1;//событие перемещения
+                        data.get_activ_army().set_target_city(this);//запомним город - назанчение
+                        obj_mouse.mouse_event(1);//переместим туда юнит
+                    }
 
-            }
-            else //город принадлежит другому игроку, попытка атаки города
-            {
-                obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
-                data.get_activ_army().set_target_city(this);//сохраним себя в защищаемом город
-                data.type_event = 3; //сохраним тип события бля дальнейшей обработки
-                data.get_activ_army().set_status(3);//сатаус армии атака на город
+                }
+                else //город принадлежит другому игроку, попытка атаки города
+                {
+                    if (data.get_activ_army() != null)
+                    {
+                        obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
+                        data.get_activ_army().set_target_city(this);//сохраним себя в защищаемом город
+                        data.type_event = 3; //сохраним тип события бля дальнейшей обработки
+                        data.get_activ_army().set_status(3);//сатаус армии атака на город
+                    }
+                }
             }
         }
     }
     public void change_vladelec(gamer vlad)
     {
-        if (vladelec!=null) vladelec.city_list.Remove(this);//удаляем из списка старого игрока
+        if (vladelec != null) vladelec.city_list.Remove(this);//удаляем из списка старого игрока
         vladelec = vlad;//обновляем владельца
         spr_city = vlad.spr_city;//город носит спрайт владельца
         this.GetComponent<SpriteRenderer>().sprite = spr_city;
         vlad.city_list.Add(this);//добавляем город игроку в список
         count_hod_start = -1;//сбросим производство
+        id_unit = -1;//сбросим производство
         koordinat_garnizon = new Vector3(koordinat.x + 0.2f, koordinat.y + 0.2f, koordinat.z);//гарнизон будет распологаться в проавом верхнем углу
         koordinat_atack = new Vector3(koordinat.x - 0.2f, koordinat.y - 0.2f, koordinat.z);//армия атаки будет распологаться в левом нижнем углу
     }
@@ -100,20 +107,20 @@ public class city : MonoBehaviour
             if (count_hod <= 0)
             {
                 count_hod = count_hod_start;//одновим счетчик
-                //создадим юнита
-                
+                                            //создадим юнита
+
                 Vector3 koor_unit = new Vector3(koordinat.x - 0.2f, koordinat.y + 0.2f, koordinat.z);//координаты создания юнита
                 unit tmp_unit_s = new unit(data.id_unit_count++);
                 tmp_unit_s.set_koordinat(koor_unit);
                 tmp_unit_s.set_unit(id_unit, vladelec, game_s.get_sprite_unit(vladelec.id, id_unit), game_s.get_sprite_unit_off());
                 game_s.create_new_army(tmp_unit_s);
-                
+
             }
         }
     }
     public void setting_activ_city(int num_unit)//метод настройки производсвта города
     {
-        if (num_unit>=0) id_unit = num_unit;
+        id_unit = num_unit;
         switch (num_unit)
         {
             case -1://ничего
@@ -164,7 +171,7 @@ public class city : MonoBehaviour
     public List<unit> get_garnison_unit_list()
     {//метод возвращает список юнитов, стоящих горнизоном
         List<unit> garnison = new List<unit>();
-        foreach(s_army a in vladelec.s_army_list)
+        foreach (s_army a in vladelec.s_army_list)
         {
             if (is_garnison(a))
             {
@@ -184,5 +191,32 @@ public class city : MonoBehaviour
     public void set_profit(int p)
     {
         profit = p;
+        
+    }
+    public void set_can_build(int f)
+    {//настройка возможного стрительства
+     //0 можно стрить легкоую пехорту, 1 легкую и тяжелую, 2-даже рыцарей, -1-ничего
+        for (int i = 0; i < f+1; i++) can_build_flag[i] = true;
+    }
+    public void start_setup_set(int n)
+    {//стартовая инициализация, n -макс номер юнита, котороый можно мтроить разу
+        can_build_flag = new bool[3];//список возможного стрительства в виде флагов
+        for (int i = 0; i <= n; i++) can_build_flag[i] = true;//например при n=1 в городе можно стрить легкую пехоту(0), тяжедую пехоту (1), кавалерию (2) нельзя
+        GameObject obj_player = GameObject.Find("land");
+        //к объекту привязан свой скрипт ищем его
+        data = obj_player.GetComponent(typeof(data_game)) as data_game;
+        game_s = obj_player.GetComponent(typeof(game)) as game;
+        obj_mouse = obj_player.GetComponent(typeof(mouse)) as mouse;
+        count_hod_start = -1;//при старте он -1 чтобы юниты не создавались
+        id_unit = -1;
+    }
+    public bool can_any_build()
+    {//проверка на то что город может хоть что-то строить 
+        bool flag = false;
+        for (int i=0;i<can_build_flag.Length;i++)
+        {
+            if (can_build_flag[i]) flag = true;
+        }
+        return flag;
     }
 }

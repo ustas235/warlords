@@ -134,6 +134,7 @@ public class s_army : MonoBehaviour
         u.destroy_unit();
         if (unit_list.Count == 0)
         {
+            if (data.get_activ_army().id == id) data.kontur.SetActive(false);//если погибла атакующая арми погасим контур
             vladelec.obj_army_list.Remove(obj_army);//список объектов
             vladelec.s_army_list.Remove(this);//скриптов к объектам
             Destroy(army_flag);
@@ -149,7 +150,8 @@ public class s_army : MonoBehaviour
         }
         army_flag.transform.position = k;
         this.transform.position = k;
-        
+        data.kontur.transform.position = k;//переместим контур
+
     }
     public void set_koordinat(Vector3 k)
     {
@@ -167,6 +169,7 @@ public class s_army : MonoBehaviour
                 flag_g = true;
                 def_city = c;//запомним город
                 target_city=def_city;
+                data.type_event = 3;//уточним тип события, теперь атака идет на город
                 break;
             }
         //если атака идет на гарнизон, проверим нет ли в городе еще войск
@@ -210,11 +213,13 @@ public class s_army : MonoBehaviour
         calkulate_atack(unit_list, def_unit);//делаем расчет атаки и покаже окно
        
     }
-    
+
     private void OnMouseDown()
     {
         //Debug.Log("Сработал арми");
-        if (!EventSystem.current.IsPointerOverGameObject() )
+        if (!data.get_flag_army_is_move())
+        { //пока двигаются армии не реагируем на клик мышки
+        if (!EventSystem.current.IsPointerOverGameObject())
         {
             if (data.get_activ_army() == null)
             {
@@ -223,6 +228,8 @@ public class s_army : MonoBehaviour
                     data.set_activ_army(this);//при клике юнита он передает в данные активной армии
                     this.transform.position = data.get_grid_step(this.transform.position);//выровним позицию по сетке
                     data.move_cam(koordinat);
+                    data.kontur.SetActive(true);
+                    data.kontur.transform.position = koordinat;//переместим контур
                 }
             }
             else
@@ -235,7 +242,7 @@ public class s_army : MonoBehaviour
                     //obj_mouse.do_kursor();
                 }
                 else//юнит союзни переместим на него курсор
-                { 
+                {
                     if (this.id != data.get_activ_army().id)
                     {//если клик по другой союзной армии
                         data.type_event = 1;//событие перемещения
@@ -244,6 +251,7 @@ public class s_army : MonoBehaviour
                     }
                 }
             }
+        }
         }
         //obj_mouse.mouse_event(1);//переместим туда курсор
         //Debug.Log("Стал активным в "+ this.transform.position);
@@ -382,6 +390,8 @@ public class s_army : MonoBehaviour
     public void set_status(int st)
     {//метод выставляет статус армии и всех входящих юнитов
         status_army = st;
+
+        Debug.Log("статус армии "+st);
         foreach (unit u in unit_list) u.status_untit = st;
     }
     public int get_status()
@@ -398,6 +408,11 @@ public class s_army : MonoBehaviour
     }
     public void finih_atack(List<unit> unit_list_atack, List<bool> f_a, List<unit> unit_list_def, List<bool> f_d)
     {//метод обрабатывае результаты боя 
+        if ((data.type_event==3)&(!f_d.Contains(true)))//атака на город и нет выживших защитников
+        {
+            get_target_city().change_vladelec(vladelec);//меняем владельца города
+            set_target_city(null);//сбросим целевой город
+        }
         //удалим убитые юниты
         for (int i = unit_list_atack.Count - 1; i > -1; i--)
         {
@@ -419,11 +434,7 @@ public class s_army : MonoBehaviour
         }
 
         //если все защитники пали и была защита города, то город передается новому владельцу
-        if ((unit_list_def.Count < 1) & (status_army == 3))
-        {
-            get_target_city().change_vladelec(vladelec);//меняем владельца города
-            set_target_city(null);//сбросим целевой город
-        }
+        
         set_status(0);//меняем статус армии
         set_army();
         data.setting_panel_unit();//настроим панель с юнитами
@@ -436,5 +447,18 @@ public class s_army : MonoBehaviour
     public int get_max_unit_str()
     {
         return max_unit_strenght;
+    }
+    public bool is_garnison()
+    {//проверка, на то что армия стоит в городе
+        bool flag=false;
+        foreach (city c in vladelec.city_list)
+        {
+            if (c.is_garnison(this))
+            {
+                flag = true;
+                break;
+            }
+        }
+        return flag;
     }
 }

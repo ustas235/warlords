@@ -7,12 +7,15 @@ public class data_game : MonoBehaviour
 {
     // Start is called before the first frame update
     //setting game--------------------------
-    public float start_gold = 10f;//стартовый капитал
+    float start_gold = 40f;//стартовый капитал
     public int min_city_dohod = 16;//vbybvfkmys доход города
     public int max_city_dohod = 32;//максимальный доход города
     public float koef_cost = 0.5f;//стоимость содержания воиск 0.5 от стоимости
     int count_player = 2;//количесвто игроков
+    public List<int> player_num_bot = new List<int>();//номера игроков-ботов
     public int start_unit = 1;//старотовые юниты всех игроков 0 легкая пехота, 1 тяжедая, 2 рыцыри
+    public int count_type_unit = 3;//количество типов юнитов, пока три
+    int[] cost_build = new int[] { };//список стоимостей покупок нового строительства
     //-----------------------
     private unit activ_unit;//активный юнит
     private bool is_army_move = false;//флаг что армия находится в движении
@@ -40,6 +43,7 @@ public class data_game : MonoBehaviour
     public s_panel_attack atack_panel_s_24;//скрипт напнели сатакой на 24 юнитов
     public s_panel_attack atack_panel_s_32;//скрипт напнели сатакой на 32 юнитов
     public s_main_panel main_panel;//скрипт главноей панели
+    public GameObject kontur;//обводка активного юнита
     public Vector2Int st_p, fin_p;//индексы координат х и у в массиве координат grid_x и grid_y
     public float[] grid_x=new float[18];
     public float[] grid_y = new float[18];
@@ -52,9 +56,11 @@ public class data_game : MonoBehaviour
     public item_cell[,] kletki;//двумерный массив с объектами клеток
     void Start()
     {
-        start_gold = 10f;
+        cost_build = new int[] { 50, 100, 200 };
+        player_num_bot.Add(2);
         GameObject obj_player = GameObject.Find("land");
         game_s = obj_player.GetComponent(typeof(game)) as game;//найдем главный скрипт с игрой
+        kontur = GameObject.Find("kontur");
         //надем скрипт с панелью юнитов
         units_panel_s = GameObject.Find("Panel_unit").GetComponent(typeof(s_panel_unit)) as s_panel_unit;//найдем скрипт панели юнитов
         city_panel_s = GameObject.Find("Panel_city").GetComponent(typeof(s_panel_city)) as s_panel_city;//найдем главный скрипт панели города
@@ -113,8 +119,11 @@ public class data_game : MonoBehaviour
         if (a != null)
         {
             setting_panel_unit();//настроим панель с юнитами
+            kontur.SetActive(true);
+            kontur.transform.position = a.koordinat;
         }
-        
+        else kontur.SetActive(false);
+
     }
     public unit get_activ_unit()//получение активного юнита
     {
@@ -234,6 +243,8 @@ public class data_game : MonoBehaviour
     public void set_flag_army_is_move(bool f)
     {//установить флаг состоятния движения армий
         is_army_move=f;
+        
+        
     }
     public gamer get_activ_igrok()
     {
@@ -242,5 +253,13 @@ public class data_game : MonoBehaviour
     public void set_activ_igrok(gamer g)
     {
         tek_activ_igrok = g;
+    }
+    public float get_start_gold()
+    {
+        return start_gold;
+    }
+    public int[] get_cost_build()
+    {
+        return cost_build;
     }
 }

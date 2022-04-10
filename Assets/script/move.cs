@@ -40,8 +40,8 @@ public class move : MonoBehaviour
         if (data.can_move_cell_list.Count > 0)
         {
             foreach (GameObject p in data.spisok_puti) Destroy(p);
+            data.set_flag_army_is_move(true);//установим флаг движения армии
             StartCoroutine(start_move_coroutine());
-
         }
     }
     IEnumerator start_move_coroutine()
@@ -96,6 +96,7 @@ public class move : MonoBehaviour
             case 3:// атака на город
                 if (data.get_activ_army().check_koordinat(kursor.transform.position))
                 {//если добрались до противника начнется бой
+                    data.get_activ_army().set_status(3);
                     data.get_activ_army().attack_event_city();//начинаем атаку на другой город
                 }
                 else data.set_flag_army_is_move(false);//если не дошли но ходы закончились после окончание движения дадим об это знать
@@ -104,6 +105,7 @@ public class move : MonoBehaviour
                 data.set_flag_army_is_move(false);//после окончание движения дадим об это знать
                 break;
         }
+        data.type_event = 0;
     }
    
 }

@@ -90,7 +90,8 @@ public class game : MonoBehaviour
         if (!data.get_flag_army_is_move())//если нет армий в пути сможем завершить ход
         {
             foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
-
+            data.can_move_cell_list.Clear();//очистим мозможные ходы
+            obj_mouse.kursor.SetActive(false);//скроем курсор
             int next = data.get_activ_igrok().id;
             int count = 0;//ограничитель количества кругов
             while (count < 20)//ищем очередного игрока
@@ -140,6 +141,7 @@ public class game : MonoBehaviour
         data.set_activ_army(null);
         obj_mouse.kursor.gameObject.SetActive(false);// курсор невидим
         foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
+        data.kontur.SetActive(false);//покажем контур
     }
     public void next_unit_button()// обработка кнопки перебор юнитов
     {
@@ -151,6 +153,8 @@ public class game : MonoBehaviour
             if (index_unit >= data.get_activ_igrok().obj_army_list.Count) index_unit = 0;
             data.move_cam(data.get_activ_igrok().s_army_list[index_unit].koordinat);
             data.set_activ_army(data.get_activ_igrok().s_army_list[index_unit]);
+            data.kontur.SetActive(true);//покажем контур
+            data.kontur.transform.position = data.get_activ_army().koordinat;//переместим контур
             foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
             obj_mouse.kursor.gameObject.SetActive(false);// курсор невидим
         }//либо на первый город
@@ -160,9 +164,9 @@ public class game : MonoBehaviour
         for (int i = 0; i < (data.get_count_players()+1); i++)
         {
             gamer tmp_gamer;
-            //боты играют за игроков начиная со второго
-            if (i > 2) tmp_gamer = new gamer(i, true);
-            else tmp_gamer = new gamer(i, false);
+            //если номер бота естьв списке то он бот
+            if (data.player_num_bot.Contains(i)) { tmp_gamer = new gamer(); tmp_gamer.start_setup(i, true); }
+            else { tmp_gamer = new gamer(); tmp_gamer.start_setup(i, false); }
             gamer_list.Add(tmp_gamer);
             gamer_list[i].spr_city = spr_list_city[i][0];//игрок запоминает спратй своего города
         }
@@ -186,11 +190,14 @@ public class game : MonoBehaviour
             Vector3 koor = new Vector3(list_city_kor[i].x, list_city_kor[i].y, -2.0f);
             GameObject obj_city = (GameObject)Instantiate(city_prefab, koor, Quaternion.identity);
             city tmp_city = obj_city.GetComponent(typeof(city)) as city;
+            
             tmp_city.koordinat = koor;//скрипт города хранит его координаты
             tmp_city.vladelec = gamer_list[0];//пока все города владеет нейтрал
             tmp_city.set_profit(rnd.Next(data.min_city_dohod, data.max_city_dohod));//устаавливаем рандомный доход
-            Debug.Log("profit " + i + " " + tmp_city.get_profit());
+            //Debug.Log("profit " + i + " " + tmp_city.get_profit());
             city_obj_list.Add(obj_city);
+            tmp_city.start_setup_set(-1);//сатровая настройка скрипта, -1 - в городе нет купленных производств
+            
 
         }
         //раздаем города игрокам
@@ -198,7 +205,9 @@ public class game : MonoBehaviour
         change_city_player(0, 3);
         change_city_player(0, 4);
         change_city_player(0, 5);
+        change_city_player(0, 6);
         change_city_player(0, 7);
+        change_city_player(0, 8);
         change_city_player(1, 0);
         change_city_player(2, 2);
         if (data.get_count_players() > 2) change_city_player(3, 6);
@@ -218,7 +227,6 @@ public class game : MonoBehaviour
                 tmp_unit_s.id_unit = data.id_unit_count++;
                 tmp_unit_s.set_koordinat(koor_unit);
                 tmp_unit_s.set_unit(data.start_unit, gamer_list[i], get_sprite_unit(i, data.start_unit), spr_unit_off);//настраиваем юнит
-                
                 create_new_army(tmp_unit_s);//создаем армию на основе юнита
 
             }
@@ -226,8 +234,10 @@ public class game : MonoBehaviour
     }
     public void change_city_player(int num_igrok, int num_gorod)//метод которые меняет владельца у игрока
     {
+        
         city tmp_city = city_obj_list[num_gorod].GetComponent(typeof(city)) as city;
         tmp_city.change_vladelec(gamer_list[num_igrok]);//передает игрока 1 в город
+        //if (num_igrok != 0) tmp_city.set_can_build(2);
     }
     //метод передачи юнита игроку
 
@@ -288,35 +298,7 @@ public class game : MonoBehaviour
     {
         return spr_unit_off;
     }
-    public void finih_atack(List<unit> unit_list_atack, List<bool> f_a, List<unit> unit_list_def, List<bool> f_d)
-    {//метод обрабатывае результаты боя за город
-        //удалим убитые юниты
-        for (int i= unit_list_atack.Count-1; i>-1 ;i--)
-        {
-            if (!f_a[i])
-            {
-                unit_list_atack[i].sc_army.sub_unit_destroy(unit_list_atack[i]);//если юнит убит удалим юнит
-                f_a.RemoveAt(i);
-            }
-        }
-        for (int i = unit_list_def.Count-1; i > -1; i--)
-        {
-            if (!f_d[i])
-            {
-                unit_list_def[i].sc_army.sub_unit_destroy(unit_list_def[i]);//если юнит убит удалим юнит
-                unit_list_def.Remove(unit_list_def[i]);//т.к. список защитников был сощдан отдель чистим и его
-                f_d.RemoveAt(i);
-
-            }
-        }
-        //если все защитники пали и была защита города, то город передается новому владельцу
-        if ((unit_list_def.Count<1) & (data.get_activ_army().get_target_city() != null))
-            data.get_activ_army().get_target_city().change_vladelec(unit_list_atack[0].vladelec);
-        //data.set_def_city(null);//сбросим ссылку на защ город
-        //unit_list_atack.Clear();
-        //unit_list_def.Clear();
-        data.setting_panel_unit();//настроим панель с юнитами
-    }
+    
     public List<city> get_city_list()
     {//метод получения списка городов
         List<city> tmp_city_list = new List<city>();
@@ -449,6 +431,7 @@ public class game : MonoBehaviour
                 count_unit = count_unit + a.get_unit_list().Count;//считаем количество юнитов в клетке
             }
         }
+        if (count_unit > 8) count_unit = 8;//защито от переполнения флага
         if (army_koor_lists.Count() > 0)
         {
             foreach (s_army a in army_koor_lists)
@@ -476,5 +459,9 @@ public class game : MonoBehaviour
             army_max_strengh.army_flag.SetActive(true);
         }
 
+    }
+    public void test_but()
+    {//тест
+        data.get_activ_igrok().create_new_unit(data.activ_city);
     }
 }
