@@ -35,4 +35,8 @@ public class s_main_panel : MonoBehaviour
         txt_count_gold.GetComponent<Text>().text = ((int)count).ToString();
         txt_delta_gold.GetComponent<Text>().text = ((int)delta).ToString();
     }
+    public void OnMouseDown()
+    {
+        Debug.Log("Клип оп панели");
+    }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Random = System.Random;
 
 public class s_army : MonoBehaviour
 {
@@ -23,6 +24,8 @@ public class s_army : MonoBehaviour
     public Sprite[] flags_sprites = new Sprite[8];//массив со спратами флагов
     public Vector3 koordinat;//координаты армии
     List<unit> unit_list=new List<unit>();//список юнитов в армии
+    public bool flag_old_target=false;
+    public int old_type_event = 1;//тип события в прошлом ходу
     //для бота
     int status_army=0;//статус армии 0 -свободна, 1- в гарнизоне,2 собирается для атаки, 3 идет в атаку город, 4 идет в один из своих городов, 5 атака на другую армию
     city target_city;//город, который идет/пойдет атаковать армия
@@ -127,6 +130,7 @@ public class s_army : MonoBehaviour
             Destroy(army_flag);
             Destroy(obj_army);
         }
+        
     }
     public void unit_destroy(unit u)//убить юнит
     {
@@ -140,6 +144,8 @@ public class s_army : MonoBehaviour
             Destroy(army_flag);
             Destroy(obj_army);
         }
+        //после удаления юнита проверим не проиграл ли игрок
+        if (!data.game_s.check_gamer_lose(vladelec)) Debug.Log("Игрок " + vladelec.id + "проиграл");
     }
     public void move_army(Vector3 k)
     {
@@ -164,7 +170,8 @@ public class s_army : MonoBehaviour
         gamer oth_vl = data.def_army.vladelec;//защищаемый игрок получим из армии
         List<unit> def_unit = new List<unit>();
         city def_city = null;
-        foreach (city c in oth_vl.city_list) if (c.is_garnison(data.def_army))
+        foreach (city c in oth_vl.city_list) 
+            if (c.is_garnison(data.def_army))
             {
                 flag_g = true;
                 def_city = c;//запомним город
@@ -180,7 +187,11 @@ public class s_army : MonoBehaviour
             {
                 if (def_city.is_garnison(a))//если очередная армия в нашем городе
                 {
-                    foreach (unit u in a.unit_list) def_unit.Add(u);//записываем очередной юнит в гарнизон
+                    foreach (unit u in a.unit_list)
+                    {
+                        def_unit.Add(u);//записываем очередной юнит в гарнизон
+                        u.set_bonus(data.bonus_garnison);//даем бонус юниту
+                    }
                 }
             }
 
@@ -190,7 +201,14 @@ public class s_army : MonoBehaviour
         }
         else// если атака не на гарнизон
         {
-            foreach (unit u in data.def_army.unit_list) def_unit.Add(u);//записываем в список защитную армии
+            //соберем с клетки все союзные армии
+            foreach (s_army a in oth_vl.s_army_list)//перебираем все армии друго игрока
+            {
+                if (data.def_army.check_koordinat(a.koordinat))
+                {
+                    foreach (unit u in a.unit_list) def_unit.Add(u);//записываем в список защитную армии
+                }
+            }    
             calkulate_atack(unit_list, def_unit);//делаем расчет атаки и покаже окно
 
         }
@@ -205,7 +223,11 @@ public class s_army : MonoBehaviour
         {
             if (target_city.is_garnison(a))//если очередная армия в нашем городе
             {
-                foreach (unit u in a.unit_list) def_unit.Add(u);//записываем очередной юнит в гарнизон
+                foreach (unit u in a.unit_list)
+                {
+                    def_unit.Add(u);//записываем очередной юнит в гарнизон
+                    u.set_bonus(data.bonus_garnison);//даем бонус к гарнизону
+                }
             }
         }
         //data.atack_panel_s.set_panel_atack(unit_list, def_unit);//начинаем атаку на гарнизон
@@ -236,19 +258,21 @@ public class s_army : MonoBehaviour
             {
                 if (data.get_activ_igrok().id != this.vladelec.id)//клик по другой армии - возможно попытка атаки
                 {
+                    data.game_s.move_kursor_clik();//перемещаем курсор и армия запомнит конечную точку
                     data.def_army = this;//сохраним себя в защищаемой армии
-                    data.type_event = 2; //сохраним тип события бля дальнейшей обработки    
-                    obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
-                    //obj_mouse.do_kursor();
+                    data.type_event = 2; //сохраним тип события бля дальнейшей обработки
+                    data.get_activ_army().old_type_event = data.type_event;
+                    obj_mouse.mouse_event(2);//прокладываем путь для перемещения атакой
                 }
                 else//юнит союзни переместим на него курсор
                 {
                     if (this.id != data.get_activ_army().id)
                     {//если клик по другой союзной армии
+                        data.game_s.move_kursor_clik();//перемещаем курсор и армия запомнит конечную точку
                         data.type_event = 1;//событие перемещения
-                        obj_mouse.mouse_event(1);//переместим туда курсор
-                                                 //obj_mouse.do_kursor();
-                    }
+                        data.get_activ_army().old_type_event = data.type_event;
+                        obj_mouse.mouse_event(1);//прокладываем путь для перемещения
+                        }
                 }
             }
         }
@@ -337,14 +361,17 @@ public class s_army : MonoBehaviour
     public bool check_boy(unit a, unit d)
     {//метод расчета боя, возвращает true победитель атакующий, false -защищающийся
         int hit_a = 2, hit_d = 2;//счетчики жизней, при достижении 0 юнит погибает
-        int rnd;//рандомное значение
+        Random rnd = data.game_s.rnd;//рандомное значение
+        int tmp_rnd1, tmp_rnd2;
         int s_a,  s_d;
         while ((hit_a>0)&(hit_d>0))
         {
-            rnd = Random.Range(1, 11);
-            s_a = a.strength + rnd;
-            rnd = Random.Range(1, 11);
-            s_d = d.strength + rnd;
+            tmp_rnd1=rnd.Next(1, data.max_random_kubik);
+            s_a = a.strength+a.get_bonus() + tmp_rnd1;
+            Debug.Log("Сила атаки = " + a.strength+" + " + a.get_bonus()+" + " + tmp_rnd1);
+            tmp_rnd2 = rnd.Next(1, data.max_random_kubik);
+            s_d = d.strength+d.get_bonus() + tmp_rnd2;
+            Debug.Log("Сила защиты = " + d.strength + " + " + d.get_bonus() + " + " + tmp_rnd2+ " + " + data.max_random_kubik);
             if (s_a!=s_d)
             {
                 if (s_a > s_d) hit_d--;//у атаки больше слиа - защитникам урон
@@ -381,7 +408,9 @@ public class s_army : MonoBehaviour
     }
     public void set_target_koordinat(Vector3 k)
     {
-        target_koordinat = k;
+        target_koordinat = k;//цель бота
+        if (k==null) flag_old_target = false;
+        else flag_old_target = true;
     }
     public Vector3 get_target_koordinat()
     {
@@ -391,8 +420,8 @@ public class s_army : MonoBehaviour
     {//метод выставляет статус армии и всех входящих юнитов
         status_army = st;
 
-        Debug.Log("статус армии "+st);
-        foreach (unit u in unit_list) u.status_untit = st;
+        //Debug.Log("статус армии "+st);
+        foreach (unit u in unit_list) u.set_status_unit(st);
     }
     public int get_status()
     {//метод выставляет статус армии и всех входящих юнитов
@@ -408,14 +437,24 @@ public class s_army : MonoBehaviour
     }
     public void finih_atack(List<unit> unit_list_atack, List<bool> f_a, List<unit> unit_list_def, List<bool> f_d)
     {//метод обрабатывае результаты боя 
-        if ((data.type_event==3)&(!f_d.Contains(true)))//атака на город и нет выживших защитников
+        if (data.type_event==3)//атака на город 
         {
-            get_target_city().change_vladelec(vladelec);//меняем владельца города
-            set_target_city(null);//сбросим целевой город
+            if (!f_d.Contains(true))// нет выживших защитников
+            {
+                get_target_city().set_flag_create_garnison(false);//сбросим флаг строительства нейтральным городом, на всякий случай
+                get_target_city().change_vladelec(vladelec);//меняем владельца города
+                set_target_city(null);//сбросим целевой город
+            }
+            else//есть выжившие защитники
+            {//установим флаг строительства нейтральным городом
+                if (get_target_city().vladelec.id == 0) get_target_city().set_flag_create_garnison(true);
+            }
         }
+        
         //удалим убитые юниты
         for (int i = unit_list_atack.Count - 1; i > -1; i--)
         {
+            unit_list_atack[i].set_bonus(0);//после атаки сбросим бонусы
             if (!f_a[i])
             {
                 unit_list_atack[i].sc_army.unit_destroy(unit_list_atack[i]);//если юнит убит удалим юнит
@@ -425,6 +464,7 @@ public class s_army : MonoBehaviour
 
         for (int i = unit_list_def.Count - 1; i > -1; i--)
         {
+            unit_list_def[i].set_bonus(0);//после атаки сбросим бонусы
             if (!f_d[i])
             {
                 unit_list_def[i].sc_army.unit_destroy(unit_list_def[i]);//если юнит убит удалим юнит
@@ -461,4 +501,5 @@ public class s_army : MonoBehaviour
         }
         return flag;
     }
+    
 }

@@ -36,26 +36,32 @@ public class mouse : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Check if the left mouse button was clicked
+        
+
 
     }
     //клик для указания конца пути
-    void OnMouseDown()
+    public void OnMouseDown()
     {
         if (!data.get_flag_army_is_move())
         {
             
-            if ((!EventSystem.current.IsPointerOverGameObject()) & (data.get_activ_army() != null))
+            if ((!IsPointerOverUIObject()) & (data.get_activ_army() != null))
             {
-                mouse_event(1);
+                data.game_s.move_kursor_clik();//перемещаем курсор и армия запомнит конечную точку
                 data.type_event = 1;//1-перемещение сохраним тип события бля дальнейшей обработки
+                data.get_activ_army().old_type_event = data.type_event;
+                mouse_event(1);
             }
-            if ((!EventSystem.current.IsPointerOverGameObject()) & (data.get_activ_army() == null))
+            if ((!IsPointerOverUIObject()) & (data.get_activ_army() == null))
             {//если клик по карте но нет активной армии, то переместим туда камеру
                 MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 MousePos.z = -10f;
                 data.move_cam(MousePos);//перемещаем камеру
             }
         }
+        
     }
     //создание объектов  показывающих путь
     public void mouse_event(int type_event)
@@ -69,12 +75,6 @@ public class mouse : MonoBehaviour
         //for (int i=0;i< spisok_puti.Count;i++)
         foreach (GameObject p in spisok_puti) Destroy(p);
         spisok_puti.Clear();
-        if (!data.get_activ_igrok().bot_flag)
-        {//если метод вызвал бот, то эти настройки он сделает сам
-            MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            MousePos.z = -2.1f;
-            kursor.transform.position = data.get_grid_step(MousePos);//перемещаем курсор
-        }
         kursor.gameObject.SetActive(true);
         //установка стартовой и конечной точки
         //если у игрока есть юниты
@@ -86,7 +86,7 @@ public class mouse : MonoBehaviour
         }
     }
 
-    void create_put(Vector2Int st, Vector2Int f)
+    public void create_put(Vector2Int st, Vector2Int f)
     {
         close_list = data.game_s.get_put_cell(data.get_activ_army().koordinat, kursor.transform.position);
         int count_hod = data.get_activ_army().tek_hod;//оставшееся количесвто ходов юнита
@@ -118,36 +118,24 @@ public class mouse : MonoBehaviour
             data.get_activ_army().tek_hod_tmp = count_hod;
         }
     }
-    public void culkulate_nex_put()
-    {//!!тест
-        GameObject p;
-        foreach (GameObject pt in spisok_puti) Destroy(pt);
-        spisok_puti.Clear();
-        count_test++;
-        List<city> tmp_city_list = data.game_s.get_city_list();
-        if (count_test >= tmp_city_list.Count) count_test = 0;
-        data.get_activ_igrok().calculate_put(data.get_activ_army(), tmp_city_list[count_test]);
-        List<item_cell> cell_list = data.get_activ_igrok().bot_put_cell_list;
-        Vector3 tmp_v = tmp_city_list[count_test].min_kkor;
-        kursor.gameObject.SetActive(true);
-        kursor.transform.position = tmp_v;//перемещаем курсор
-        MousePos = tmp_v;
-        MousePos.z = -10f;
-        data.move_cam(MousePos);//перемещаем камеру
-        
-        foreach (item_cell cell in cell_list)
-        {
-            p = (GameObject)Instantiate(point_put, new Vector3(cell.kordinat.x, cell.kordinat.y, -2.0f), Quaternion.identity);
-            spisok_puti.Add(p);
-        }
-    }
+   
     public GameObject get_kursor()
     {//получение ссылки на курсор
         return kursor;
     }
     
-
+    private static bool IsPointerOverUIObject()
+    {//проверка на то что клик идет по UI
+        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
+        eventDataCurrentPosition.position = new Vector3(Input.mousePosition.x, Input.mousePosition.y, Input.mousePosition.z);
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+        return results.Count > 0;
+    }
 }
+    
+
+
 
 
 

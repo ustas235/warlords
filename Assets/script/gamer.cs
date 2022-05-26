@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class gamer : MonoBehaviour//
+public class gamer //
 {
     public List<city> city_list = new List<city>();//список городов
     public List<GameObject> obj_army_list = new List<GameObject>();//список объектов юнитов
@@ -76,7 +76,7 @@ public class gamer : MonoBehaviour//
     public void action_bot()
     {//дествие бота
         foreach (city c in city_list)
-        {//строим войска и формируем гарнизоны
+        {//перебираем города строим войска и формируем гарнизоны
             if (check_upgrate_city(c))//проверка на то что можем улучшить пр-во в городе
             {//если можем улучшить производства
                 upgrate_build_city(c);//улучшаем производство в городе
@@ -190,9 +190,9 @@ public class gamer : MonoBehaviour//
         garnison_unit_list = c.get_garnison_unit_list();
         foreach (unit u in garnison_unit_list)
         {
-            if (u.status_untit==0)  
+            if (u.get_status_unit()==0)  
                 unit_city_list.Add(u);//записываем очередной юнит в список
-            if (u.status_untit == 1)
+            if (u.get_status_unit() == 1)
             {
                 count_ready_garnison_unit++;
                 tmp_army_garnison = u.sc_army;
@@ -210,13 +210,13 @@ public class gamer : MonoBehaviour//
             {
                 //если первый юнит состоял в большой армии, то создадим ему свою
                 tmp_army_garnison = unit_city_list[0].sc_army;
-                unit_city_list[0].status_untit = 1;//поменяем статус юнита
+                unit_city_list[0].set_status_unit(1);//поменяем статус юнита
                 tmp_army_garnison.set_status(1);//поменяем статус армии
                     //юниты записываем в армию первого юнита
                 for (int i = 1; i < bot_min_garnison; i++)
                 {
                     tmp_army_garnison.add_unit(unit_city_list[i]);//записываем в армию гарнизона очередного юнита
-                    unit_city_list[i].status_untit = 1;//юниты помнят что они в гарнизоне
+                    unit_city_list[i].set_status_unit(1);//юниты помнят что они в гарнизоне
                 }
                 tmp_army_garnison.move_army(c.koordinat_garnizon);//перемещаем в точку гарнизона
                 tmp_army_garnison.set_status(1);
@@ -235,8 +235,8 @@ public class gamer : MonoBehaviour//
         garnison_unit_list = c.get_garnison_unit_list();
         foreach (unit u in garnison_unit_list)
         {
-            if (u.status_untit == 0) unit_city_list.Add(u);//записываем очередной юнит в список
-            if (u.status_untit == 2)
+            if (u.get_status_unit() == 0) unit_city_list.Add(u);//записываем очередной юнит в список
+            if (u.get_status_unit() == 2)
             {
                 tmp_army_atack = u.sc_army;
                 flag_unit_atack_is = true;
@@ -250,7 +250,7 @@ public class gamer : MonoBehaviour//
             if (!flag_unit_atack_is)
             {
                 tmp_army_atack = unit_city_list[0].sc_army;
-                unit_city_list[0].status_untit = 2;//поменяем статус юнита
+                unit_city_list[0].set_status_unit(2);//поменяем статус юнита
                 tmp_army_atack.set_status(2); //поменяем статус армии
             }
             //юниты записываем в армию первого юнита
@@ -258,7 +258,7 @@ public class gamer : MonoBehaviour//
             {
                 if (unit_city_list[i].contains_to_list(tmp_army_atack.get_unit_list())) continue;//если юнит уже в армии то переходи к следующему
                 if (tmp_army_atack.add_unit(unit_city_list[i]))//записываем в армию атаки очередного юнита если есть место
-                    unit_city_list[i].status_untit = 2;//поменяем статус юнита
+                    unit_city_list[i].set_status_unit(2);//поменяем статус юнита
                 else
                 {//места в армии атаки нет
                     break;//заканчиваем набор
@@ -299,7 +299,7 @@ public class gamer : MonoBehaviour//
     }
     //проверка армии, что хватит для атаки
     public bool training_army_compleed(s_army arm, city cit)
-    {
+    {//проверка на то что армии хватит для атаки на другой город
         bool army_compleed = false;
         int other_strenght_total = 0;//сила вражеского гарнризона, равняеся сумме сил всех юнитов
         int this_strenght_total = 0;//сила гарнризона игрока, равняеся сумме сил всех юнитов
@@ -307,7 +307,7 @@ public class gamer : MonoBehaviour//
         other_unit_list = cit.get_garnison_unit_list();//получаем список юнито гарнизона
         foreach (unit u in other_unit_list) other_strenght_total += u.strength;
         foreach (unit u in arm.get_unit_list()) this_strenght_total += u.strength;
-        if ((this_strenght_total > other_strenght_total)||(arm.get_unit_list().Count>7)) army_compleed = true;//условие начала похода на вражеский города
+        if (((this_strenght_total/2) > other_strenght_total)||(arm.get_unit_list().Count>7)) army_compleed = true;//условие начала похода на вражеский города
         return army_compleed;
     }
     //поход к цели
@@ -338,7 +338,7 @@ public class gamer : MonoBehaviour//
     }
     //просчет ходов до города
     public int calculate_put(s_army arm, city c)
-    {//стоимости пути
+    {//расчет стоимости пути до города 
         //каждый город стоит на 4 клетках, найдем минимаьный путь до ближайшей
         List<Vector3> koor_city_list = new List<Vector3>();
         //кооринаты клеток находтся в полушаге от центра во все 4 сторны

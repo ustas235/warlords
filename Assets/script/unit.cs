@@ -28,7 +28,8 @@ public class unit : MonoBehaviour
     public s_army sc_army;//ссылка на армию
     public int id_unit = 0;//уникальный номер юнита
     public bool flag_life = true;//флаг что юнит живой
-    public int status_untit = 0;//статус юнита 0 свободен, 1 - в нарнизоне, 2 -  в армии атаки
+    int bonus_strength = 0;//бонус к силе юнита в зависимости от типа и местности 
+    int status_unit = 0;//статус юнита 0 свободен, 1 - в нарнизоне, 2 -  в армии атаки
     private void Awake()
     {
         GameObject obj_player = GameObject.Find("land");
@@ -154,5 +155,21 @@ public class unit : MonoBehaviour
     public void set_max_hod(int h)
     {
         max_hod = h;
+    }
+    public void set_bonus(int b)
+    {
+        bonus_strength = b;
+    }
+    public int get_bonus()
+    {
+        return bonus_strength;
+    }
+    public void set_status_unit(int s)
+    {
+        status_unit = s;
+    }
+    public int get_status_unit()
+    {
+        return status_unit;
     }
 }

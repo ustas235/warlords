@@ -8,6 +8,7 @@ public class move : MonoBehaviour
     public GameObject kursor;
     item_cell next_cell, prev_cell;
     Vector3 MousePos = new Vector3(-2.5f, -1.7f, 0f);
+    bool flag_collision_enemy = false;//флаг что нарвались на другую армию
     public data_game data;//класс где буду хранится все данные игры
     // Start is called before the first frame update
     void Start()
@@ -63,7 +64,31 @@ public class move : MonoBehaviour
             data.setting_panel_unit(); //настраиваем панель с юнитами
             //тут нужна задержка
             yield return new WaitForSeconds(0.2f);
-
+            //если в той клетке кудаперемистилась армия есть враг - начать бой
+            flag_collision_enemy = false;
+            foreach (gamer g in data.game_s.get_gamer_list())
+            {//перебираем всех игроков
+                if (data.get_activ_igrok().id!=g.id)
+                {//смотрим только чужих игроков
+                    foreach (s_army a in g.s_army_list)
+                    {//перебираем армии другуго игрока
+                        if (data.get_activ_army().check_koordinat(a.koordinat))
+                        {
+                            flag_collision_enemy = true;//флаг что нарвались на другую армию
+                            data.def_army = a;//запомним чужую армию
+                            break;
+                        }
+                    }
+                }
+                if (flag_collision_enemy) break;
+            }
+            //прекратить движение
+            if (flag_collision_enemy)
+            {
+                data.type_event = 2;//поменям тип события
+                break;//остановим передвижение
+            }
+           
         }
         kursor.gameObject.SetActive(false);
         data.move_cam(data.get_activ_army().koordinat);//перемещаем камеру
@@ -82,21 +107,26 @@ public class move : MonoBehaviour
                 {  //если добрались до точки назначения
                     if (data.get_activ_army().get_status()==4) //если статус армии был поход в свой город то сделаем ее свободной
                         data.get_activ_army().set_status(0);//статус армии становиттся свободным
+                    data.get_activ_army().flag_old_target = false;//сбросим флаг наличия старой цели
                 }
                 data.set_flag_army_is_move(false);//после окончание движения дадим об это знать
                 break;
             case 2:// атака на другую армию
-                if (data.get_activ_army().check_koordinat(kursor.transform.position))
+                if ((data.get_activ_army().check_koordinat(kursor.transform.position))||(flag_collision_enemy))
                 {  //если добрались до противника начнется бой
+                    data.get_activ_army().flag_old_target = false;//сбросим флаг наличия старой цели
                     data.get_activ_army().attack_event_army(); //координаты армии и защитника совпали - начался бой
+                    flag_collision_enemy = false;
                     
                 }
+
                 else data.set_flag_army_is_move(false);//если не дошли но ходы закончились после окончание движения дадим об это знать
                 break;
             case 3:// атака на город
                 if (data.get_activ_army().check_koordinat(kursor.transform.position))
                 {//если добрались до противника начнется бой
                     data.get_activ_army().set_status(3);
+                    data.get_activ_army().flag_old_target = false;//сбросим флаг наличия старой цели
                     data.get_activ_army().attack_event_city();//начинаем атаку на другой город
                 }
                 else data.set_flag_army_is_move(false);//если не дошли но ходы закончились после окончание движения дадим об это знать

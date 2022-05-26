@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = System.Random;
 // в данном классе мы храним все данные игры
 public class data_game : MonoBehaviour
 {
@@ -11,11 +12,17 @@ public class data_game : MonoBehaviour
     public int min_city_dohod = 16;//vbybvfkmys доход города
     public int max_city_dohod = 32;//максимальный доход города
     public float koef_cost = 0.5f;//стоимость содержания воиск 0.5 от стоимости
-    int count_player = 2;//количесвто игроков
+    int count_player_max = 9;//максимально количество игроков для карты включая нейтрала
+    public int[] gamer_array = new int[9] { 1, 1, 0, 0, 1, 0, 0, 0, 0 };//кто играет 0 нейтрал, 1 белый, 2 черный и т.д.
+    public int[] bot_array = new int[9] { 0, 0, 0, 0, 1, 0, 0, 0, 0 };//кто из игроков бот
+    public int[] city_array = new int[9] { 1, 0, 2, 0, 0, 0, 3, 0, 4 };//в 0-м городе всгде белый, во 2-м черный.....
     public List<int> player_num_bot = new List<int>();//номера игроков-ботов
     public int start_unit = 1;//старотовые юниты всех игроков 0 легкая пехота, 1 тяжедая, 2 рыцыри
     public int count_type_unit = 3;//количество типов юнитов, пока три
     int[] cost_build = new int[] { };//список стоимостей покупок нового строительства
+    public int bonus_garnison = 2;//бонус к силе за то что юнит гарнизон в городе
+    public int max_random_kubik = 6;//разброс выпадения рандома при расчете боя
+    public int num_neutral_unit_build = 1;//номер юнита который будут строить нейтральные города после победы
     //-----------------------
     private unit activ_unit;//активный юнит
     private bool is_army_move = false;//флаг что армия находится в движении
@@ -56,8 +63,13 @@ public class data_game : MonoBehaviour
     public item_cell[,] kletki;//двумерный массив с объектами клеток
     void Start()
     {
-        cost_build = new int[] { 50, 100, 200 };
-        player_num_bot.Add(2);
+        max_random_kubik = 6;
+        
+        cost_build = new int[] { 50, 100, 200 }  ;
+        //добавляем ботов
+        //player_num_bot.Add(2);
+        //player_num_bot.Add(3);
+        //player_num_bot.Add(4);
         GameObject obj_player = GameObject.Find("land");
         game_s = obj_player.GetComponent(typeof(game)) as game;//найдем главный скрипт с игрой
         kontur = GameObject.Find("kontur");
@@ -121,6 +133,7 @@ public class data_game : MonoBehaviour
             setting_panel_unit();//настроим панель с юнитами
             kontur.SetActive(true);
             kontur.transform.position = a.koordinat;
+            game_s.load_old_put();//загрузим старый путь армии
         }
         else kontur.SetActive(false);
 
@@ -226,13 +239,13 @@ public class data_game : MonoBehaviour
         }
         units_panel_s.set_panel_unit(point_unit_list);
     }
-    public void set_count_players(int n)
+    public void set_count_player_max(int n)
     {
-        count_player = n;
+        count_player_max = n;
     }
-    public int get_count_players()
+    public int get_count_player_max()
     {
-        return count_player;
+        return count_player_max;
     }
 
 

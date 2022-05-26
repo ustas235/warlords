@@ -25,10 +25,10 @@ public class city : MonoBehaviour
     public Vector3 min_kkor;//координаты ближайшей точки, нужны для расчета у ботов
     public int id_unit = -1;//номер производимого юнита 0- легкая пехота, 1- тяжелая, 2- рыцарь
     public int count_hod = 1, count_hod_start = -1;//количество ходов до завершения строительства
-    public List<unit> garnison = new List<unit>();//юниты охраняющие город
+    List<unit> garnison = new List<unit>();//юниты охраняющие город
     public bool[] can_build_flag;//список возможного стрительства в виде флагов
     public int bot_num_unit_build=-1;//номер юнита который боту будет стрить в этом городе
-
+    bool falg_create_neutral_garnison = false;
     private void Awake()
     {
         
@@ -57,6 +57,7 @@ public class city : MonoBehaviour
         {//пока двигаются армии не реагируем на клик мышки
             if ((!EventSystem.current.IsPointerOverGameObject()))
             {
+                
                 if (data.get_activ_igrok().id == vladelec.id)//городу кликает владелец
                 {
                     if (data.get_activ_army() == null)//нет активынх юнитов откроем панель города
@@ -67,7 +68,9 @@ public class city : MonoBehaviour
                     }
                     else
                     {
-                        data.type_event = 1;//событие перемещения
+                        data.game_s.move_kursor_clik();//перемещаем курсор и армия запомнит конечную точку
+                        data.type_event = 1;//1-перемещение сохраним тип события бля дальнейшей обработки
+                        data.get_activ_army().old_type_event = data.type_event;
                         data.get_activ_army().set_target_city(this);//запомним город - назанчение
                         obj_mouse.mouse_event(1);//переместим туда юнит
                     }
@@ -77,10 +80,13 @@ public class city : MonoBehaviour
                 {
                     if (data.get_activ_army() != null)
                     {
-                        obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
+                        data.game_s.move_kursor_clik();//перемещаем курсор и армия запомнит конечную точку
                         data.get_activ_army().set_target_city(this);//сохраним себя в защищаемом город
                         data.type_event = 3; //сохраним тип события бля дальнейшей обработки
+                        data.get_activ_army().old_type_event = data.type_event;
                         data.get_activ_army().set_status(3);//сатаус армии атака на город
+                        obj_mouse.mouse_event(2);//вызываем метод перемещения с атакой
+                        
                     }
                 }
             }
@@ -88,7 +94,13 @@ public class city : MonoBehaviour
     }
     public void change_vladelec(gamer vlad)
     {
-        if (vladelec != null) vladelec.city_list.Remove(this);//удаляем из списка старого игрока
+        if (!vladelec.Equals(null))
+        {
+            vladelec.city_list.Remove(this);//удаляем из списка старого игрока
+            //после смены владельца проверим не проиграл ли игрок
+            //if (!data.game_s.check_gamer_lose(vladelec)) Debug.Log("Игрок " + vladelec.id + "проиграл");
+        }
+        
         vladelec = vlad;//обновляем владельца
         spr_city = vlad.spr_city;//город носит спрайт владельца
         this.GetComponent<SpriteRenderer>().sprite = spr_city;
@@ -140,7 +152,7 @@ public class city : MonoBehaviour
                 count_hod = 3;
                 break;
             default:
-                count_hod_start = 1;
+                count_hod_start = -1;
                 count_hod = 1;
                 break;
 
@@ -170,15 +182,15 @@ public class city : MonoBehaviour
     }
     public List<unit> get_garnison_unit_list()
     {//метод возвращает список юнитов, стоящих горнизоном
-        List<unit> garnison = new List<unit>();
+        List<unit> tmp_garnison = new List<unit>();
         foreach (s_army a in vladelec.s_army_list)
         {
             if (is_garnison(a))
             {
-                foreach (unit u in a.get_unit_list()) garnison.Add(u);
+                foreach (unit u in a.get_unit_list()) tmp_garnison.Add(u);
             }
         }
-        return garnison;
+        return tmp_garnison;
     }
     public int get_profit()
     {
@@ -218,5 +230,39 @@ public class city : MonoBehaviour
             if (can_build_flag[i]) flag = true;
         }
         return flag;
+    }
+    public void create_neutral_unit()
+    {//строителсьтво войска после удачной обороны нейтралами
+        //тест уберем
+        /*
+        if (falg_create_neutral_garnison)
+        {//если стоит флаг строительсва нейтрального гарнизона
+            garnison = get_garnison_unit_list();//обновим гарнизон
+            //посчитаем стоимость его содержания
+            int cost_garnison = 0;
+            foreach (unit u in garnison) cost_garnison = cost_garnison + u.price;
+            cost_garnison = cost_garnison / 2;//стоимость содержания равнаполовине всей стоимости
+            unit u_g = garnison[0];//предполагается что хоть один юнит в гарнизоне есть
+            
+            if ((profit - cost_garnison) >= (u_g.price / 2)) create_unit();//строим юнит
+        }
+        */
+    }
+    public bool get_flag_create_garnison()
+    {//получение флага строительства нейтрального гарнизона
+        return falg_create_neutral_garnison;
+    }
+    public void set_flag_create_garnison(bool f)
+    {//установка флага строительства нейтрального гарнизона
+        falg_create_neutral_garnison =f;
+        if (f) setting_activ_city(data.num_neutral_unit_build);//если флаг ставится, то настравиваем стройку
+        else setting_activ_city(-1);//ничего не строим
+    }
+    public bool check_koordinat(Vector3 k)
+    {//метод сравнения координат
+        double delta_x = koordinat.x - k.x;
+        double delta_y = koordinat.y - k.y;
+        if ((delta_x <= 0.2) & (delta_y <= 0.2)) return true;
+        else return false;
     }
 }

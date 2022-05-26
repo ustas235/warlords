@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Random = System.Random;
 
@@ -23,7 +24,7 @@ public class game : MonoBehaviour
     List<Sprite[]> spr_list_city = new List<Sprite[]>();//список со спратами городов по номеру игрока
     List<Sprite[]> spr_list_unit = new List<Sprite[]>();//список со спратами юнитов по номеру игрока
     List<Sprite[]> spr_list_unit_off = new List<Sprite[]>();//список со спратами выключенных юнитов
-    Random rnd;//рандом
+    public Random rnd;//рандом
     int index_unit = 0;//счетчик для перебора юнитов
     public int id = 0;
     
@@ -98,9 +99,19 @@ public class game : MonoBehaviour
             {
                 next++;
                 count++;
-                if (next >= gamer_list.Count) next = 1;
+                if (next >= gamer_list.Count)
+                {//перебрали всех игроков начинаем с нейтрального
+                 //переберем нейтральные города и посмотрим, не надо ли там начать строить гарнизон после удачной обороны
+                    foreach (city c in gamer_list[0].city_list) c.create_neutral_unit();
+                    next = 1;
+                }
                 if (gamer_list[next].still_play)
                 {
+                    if (num_tek_igrok == next)
+                    {
+                        Debug.Log("Победил игрок " + num_tek_igrok);
+                        SceneManager.LoadScene("Main menu");
+                    }
                     gamer_list[next].active = true;
                     num_tek_igrok = next;
                     data.set_activ_igrok(gamer_list[num_tek_igrok]);//сохраним в дате текущего игрока
@@ -131,7 +142,9 @@ public class game : MonoBehaviour
             {
                 if (data.get_activ_igrok().city_list.Count > 0) data.move_cam(data.get_activ_igrok().city_list[0].koordinat);
             }
-            if (data.get_activ_igrok().bot_flag) data.get_activ_igrok().action_bot();//если бут то пусть он сам играет
+            //бот делает дело
+            if (data.get_activ_igrok().bot_flag) 
+                data.get_activ_igrok().action_bot();//если бут то пусть он сам играет
         }
     }
     //тест!!!
@@ -157,18 +170,30 @@ public class game : MonoBehaviour
             data.kontur.transform.position = data.get_activ_army().koordinat;//переместим контур
             foreach (GameObject p in data.spisok_puti) Destroy(p);//подчистим старые пути
             obj_mouse.kursor.gameObject.SetActive(false);// курсор невидим
+            load_old_put();//загружаем старый путь
         }//либо на первый город
     }
     public void create_gamers()//создание игроков
     {
-        for (int i = 0; i < (data.get_count_players()+1); i++)
+        for (int i = 0; i < data.get_count_player_max(); i++)
         {
-            gamer tmp_gamer;
-            //если номер бота естьв списке то он бот
-            if (data.player_num_bot.Contains(i)) { tmp_gamer = new gamer(); tmp_gamer.start_setup(i, true); }
-            else { tmp_gamer = new gamer(); tmp_gamer.start_setup(i, false); }
+            gamer tmp_gamer= new gamer();
+            if (data.gamer_array[i]>0)
+            {
+                if (data.bot_array[i]>0) { tmp_gamer = new gamer(); tmp_gamer.start_setup(i, true); }
+                else { tmp_gamer = new gamer(); tmp_gamer.start_setup(i, false); }
+                tmp_gamer.spr_city = spr_list_city[i][0];//игрок запоминает спратй своего города
+                tmp_gamer.still_play = true;
+            }
+            else tmp_gamer.still_play = false;
             gamer_list.Add(tmp_gamer);
-            gamer_list[i].spr_city = spr_list_city[i][0];//игрок запоминает спратй своего города
+            //если номер бота естьв списке то он бот
+            /*if (data.player_num_bot.Contains(i)) 
+            { tmp_gamer = new gamer(); tmp_gamer.start_setup(i, true); }
+            else 
+            { tmp_gamer = new gamer(); tmp_gamer.start_setup(i, false); }
+            gamer_list.Add(tmp_gamer);
+            gamer_list[i].spr_city = spr_list_city[i][0];//игрок запоминает спратй своего города*/
         }
     }
     public void initial_place()//старотвая расстановка юнитов и городов
@@ -201,6 +226,17 @@ public class game : MonoBehaviour
 
         }
         //раздаем города игрокам
+        for (int i=0;i<9;i++)//перебираем города на карте
+        {
+            Debug.Log(i);
+            change_city_player(0, i);//по умолчанию город нейтральный
+            if (data.city_array[i]>0)//если в это городе стартует игрок
+            {
+                int n = data.city_array[i];
+                if (data.gamer_array[n]>0) change_city_player(n, i);//если номер игрока есть в списке играющих
+            }    
+        }
+        /*
         change_city_player(0, 1);
         change_city_player(0, 3);
         change_city_player(0, 4);
@@ -211,9 +247,9 @@ public class game : MonoBehaviour
         change_city_player(1, 0);
         change_city_player(2, 2);
         if (data.get_count_players() > 2) change_city_player(3, 6);
-        if (data.get_count_players() > 3) change_city_player(4, 8);
+        if (data.get_count_players() > 3) change_city_player(4, 8);*/
         //даем стартовые юниты игрокам
-        for (int i = 0; i < (data.get_count_players() + 1); i++)
+        for (int i = 0; i < gamer_list.Count; i++)
         {
             //координаты места где должен появится новый юниит
             //перебираем города игрока и закидываем туда стартовые юниты
@@ -463,5 +499,44 @@ public class game : MonoBehaviour
     public void test_but()
     {//тест
         data.get_activ_igrok().create_new_unit(data.activ_city);
+    }
+    public bool check_gamer_lose(gamer g)
+    {//проверка что игрок непроиграл
+        if ((g.city_list.Count<1)&(g.s_army_list.Count<1)) g.still_play = false;
+        return g.still_play;
+    }
+    public List<gamer> get_gamer_list()
+    {
+        return gamer_list;
+    }
+    public void load_old_put()
+    {//метод перемещения курсора
+        if (data.get_activ_army().flag_old_target)
+        {
+            obj_mouse.kursor.transform.position = data.get_activ_army().get_target_koordinat();//перемещаем курсор по старым координатам
+            data.type_event = data.get_activ_army().old_type_event;//загружаем старое событие
+            obj_mouse.mouse_event(data.type_event);//строи путь со старым событием
+        }
+        
+    }
+    public void move_kursor_clik()
+    {//метод перемещения курсора
+        Vector3 MousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        MousePos.z = -2.1f;
+        obj_mouse.kursor.transform.position = data.get_grid_step(MousePos);//перемещаем курсор
+        data.get_activ_army().set_target_koordinat(obj_mouse.kursor.transform.position);//армия запомнит конечную точку;
+    }
+    public void but_move_army()
+    {//кнопка движения по старому пути
+        if (!data.get_flag_army_is_move())
+        {//если нет армий в движении
+            if (data.get_activ_army() != null)
+            {
+                GameObject kr = obj_mouse.kursor;
+                move mv = kr.GetComponent(typeof(move)) as move;
+                mv.start_move();//начло движения
+            }
+        }
+        
     }
 }
